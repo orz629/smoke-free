@@ -43,14 +43,19 @@ canvas{display:block;width:100%;height:clamp(200px,52vw,240px);touch-action:none
 .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .choice{font:inherit;color:inherit;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 12px;cursor:pointer;min-width:0}
 .choice b{display:block;font-size:15px}
-.startbtn{position:relative;text-align:center;padding:16px 30% 16px 12px;border:2px solid #d9a441;color:#2b2530;
+.startbtn{position:relative;overflow:hidden;text-align:center;padding:16px 30% 16px 18%;border:2px solid #d9a441;color:#2b2530;
   background:repeating-linear-gradient(90deg,rgba(120,80,10,.16) 0 1px,transparent 1px 6px) right/22% 100% no-repeat,linear-gradient(90deg,#fffdf7 0,#fffdf7 78%,#e8b84a 78%,#d9a441 100%);
   box-shadow:0 2px 0 rgba(0,0,0,.08);animation:startPulse 2.2s ease-in-out infinite}
+.startbtn::before{content:"";position:absolute;left:0;top:0;bottom:0;width:19%;
+  background:radial-gradient(ellipse at 0% 50%,rgba(255,200,90,.95) 0,rgba(255,200,90,0) 55%),linear-gradient(90deg,#b8301c 0,#e8602a 16%,#ff9a3c 30%,#8f8a85 46%,#bdb9b3 68%,rgba(255,253,247,0) 100%);
+  animation:ember 1.5s ease-in-out infinite}
+.startbtn b,.startbtn span{position:relative}
 .startbtn b{font-size:19px;letter-spacing:.12em}
 .startbtn span{color:#6b6070}
 .startbtn::after{content:"";position:absolute;right:calc(22% - 3px);top:0;bottom:0;width:2px;background:rgba(120,80,10,.35)}
+@keyframes ember{0%,100%{filter:brightness(1) saturate(1)}40%{filter:brightness(1.22) saturate(1.25)}70%{filter:brightness(.95)}}
 @keyframes startPulse{0%,100%{box-shadow:0 0 0 0 rgba(232,184,74,.6)}50%{box-shadow:0 0 0 9px rgba(232,184,74,0)}}
-@media (prefers-reduced-motion:reduce){.startbtn{animation:none}}
+@media (prefers-reduced-motion:reduce){.startbtn,.startbtn::before{animation:none}}
 .choice span{display:block;font-size:12px;color:var(--muted);line-height:1.45;margin-top:2px}
 .choice.one{grid-column:1 / -1}
 .choices.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}
