@@ -373,10 +373,10 @@ function persuade(){
   }
   if(r<acc+0.45){
     apply({air:-5,pat:-20});
-    return afterAction(pick(['對方回您：「關你什麼事？」','對方回您：「管很多耶，你有病喔。」','對方回您：「又沒抽到你。」'])+'周圍的人假裝沒聽見。');
+    return afterAction(pick(['對方回您：「關你什麼事？」','對方回您：「管很多耶，你有病喔。」','對方回您：「這裡又不是你家。」'])+'周圍的人假裝沒聽見。');
   }
   apply({air:-4,pat:-8});
-  afterAction(pick(sc.ignoreLines||['對方瞄了您一眼，繼續抽。','對方翻了個白眼，把煙吐向另一邊，那邊還是您這邊。']));
+  afterAction(pick(sc.ignoreLines||['對方瞄了您一眼，繼續抽。','對方翻了個白眼，把煙吐向另一邊。風一吹，又吹回來了。']));
 }
 function acceptGame(){
   var lines=shuffle([
@@ -1114,7 +1114,7 @@ function syncPhoto(){choices.querySelectorAll('[data-k]').forEach(function(b){b.
 function photoUI(){
   choices.innerHTML=''; choices.className='choices cols3';
   var sh=document.createElement('button'); sh.type='button'; sh.className='choice one'; sh.style.cssText='padding:14px 12px;text-align:center;border-color:var(--accent);grid-column:1 / -1';
-  sh.innerHTML='<b style="font-size:20px">拍照</b>';
+  sh.innerHTML='<b style="font-size:20px;display:inline-flex;align-items:center;gap:10px">拍照<i style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#d23a32;box-shadow:0 0 0 3px #fff,0 0 0 5px #d23a32"></i></b>';
   sh.addEventListener('pointerdown',function(e){e.preventDefault();shutter()}); choices.appendChild(sh);
   function mk(t,s,f,k){var b=document.createElement('button');b.type='button';b.className='choice sm';b.innerHTML='<b>'+t+'</b><span>'+s+'</span>';b.onclick=f;if(k)b.dataset.k=k;choices.appendChild(b)}
   mk('靠近拍','好拍，易被發現',function(){setNear(true)},'near');
