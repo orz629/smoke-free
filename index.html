@@ -1,0 +1,1113 @@
+<title>推娃娃車出門</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@600&display=swap">
+<style>
+/* Layout: one phone-width column. HUD on top, a street stage, an official-notice narration panel, then the choice buttons. */
+:root{
+  --bg:#ebe8f0; --sky:#dcd7e6; --panel:#f8f6fb; --fg:#26222f; --muted:#675f77; --line:#d2cbdc;
+  --smoke:#8a78a9; --accent:#c4503a; --good:#3c8a68; --warn:#b5821f; --bad:#b23b36;
+  --ground:#c6bfd2; --building:#cfc8dc;
+  --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16131c; --sky:#1f1b29; --panel:#211d2a; --fg:#ece8f3; --muted:#a199b0; --line:#363040;
+    --smoke:#a493c4; --accent:#e2704f; --good:#5fb690; --warn:#d7a24a; --bad:#e0655f;
+    --ground:#2b2634; --building:#262131; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16131c; --sky:#1f1b29; --panel:#211d2a; --fg:#ece8f3; --muted:#a199b0; --line:#363040;
+  --smoke:#a493c4; --accent:#e2704f; --good:#5fb690; --warn:#d7a24a; --bad:#e0655f;
+  --ground:#2b2634; --building:#262131; color-scheme:dark;
+}
+body{
+  background:var(--bg); color:var(--fg); font:15px/1.6 var(--sans);
+  padding-block:12px 28px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.app{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.brand{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.brand .t{font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:.02em}
+.brand .tag{font-size:11px;color:var(--muted);letter-spacing:.08em}
+.hud{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.m{min-width:0}
+.m label{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.08em;color:var(--muted);margin-bottom:4px}
+.m label span{font-variant-numeric:tabular-nums;color:var(--fg)}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:100%;transition:width .3s}
+#b-air{background:var(--good)} #b-pat{background:var(--warn)} #b-time{background:var(--smoke)}
+.bar.low i{background:var(--bad)}
+.stage{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--sky)}
+canvas{display:block;width:100%;height:clamp(200px,52vw,240px);touch-action:none}
+.narr{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-height:132px}
+.narr .who{font-size:11px;letter-spacing:.1em;color:var(--muted);margin-bottom:6px}
+.narr p{margin:0 0 8px;font-family:var(--serif);font-size:15.5px;line-height:1.75;overflow-wrap:anywhere}
+.narr p:last-child{margin-bottom:0}
+.narr p.gov{font-size:13.5px;color:var(--muted)}
+.burnwrap{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);letter-spacing:.08em;margin-top:6px}
+.burn{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.burn i{display:block;height:100%;background:var(--accent)}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.choice{font:inherit;color:inherit;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 12px;cursor:pointer;min-width:0}
+.choice b{display:block;font-size:15px}
+.choice span{display:block;font-size:12px;color:var(--muted);line-height:1.45;margin-top:2px}
+.choice.one{grid-column:1 / -1}
+.choice.big{padding:22px 14px;text-align:center;user-select:none;-webkit-user-select:none;touch-action:none}
+.choice:hover{border-color:var(--smoke)}
+.choice:active,.choice.on,.choice[aria-pressed="true"]{border-color:var(--smoke);background:var(--sky)}
+.choice:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.end{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.end h2{margin:0;font-family:var(--serif);font-size:22px;font-weight:600;text-wrap:balance}
+.end .sub{margin:0;color:var(--muted);font-size:14px}
+.risk{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0;text-align:center}
+.risk .lab{font-family:var(--serif);font-size:15px}
+.risk .num{font-family:var(--serif);font-size:44px;line-height:1.2;color:var(--accent);font-variant-numeric:tabular-nums}
+.risk small{display:block;color:var(--muted);font-size:11.5px}
+.stats{margin:0;display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:14px}
+.stats dt{color:var(--muted)} .stats dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.ach{font-size:13.5px;border:1px dashed var(--smoke);border-radius:8px;padding:8px 10px;color:var(--good)}
+.real{font-size:13.5px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.real p{margin:0}
+</style>
+
+<div class="app">
+  <div class="brand"><span class="t">推娃娃車出門</span><span class="tag">原型 v0.6 · 章節一至四 <button id="snd" class="choice" style="padding:1px 8px;font-size:11px;margin-left:6px" type="button">聲音：開</button></span></div>
+  <div class="hud">
+    <div class="m"><label><em id="l-air" style="font-style:normal">寶寶空氣</em><span id="v-air">100</span></label><div class="bar"><i id="b-air"></i></div></div>
+    <div class="m"><label>耐心<span id="v-pat">100</span></label><div class="bar"><i id="b-pat"></i></div></div>
+    <div class="m"><label>時間<span id="v-time">100</span></label><div class="bar"><i id="b-time"></i></div></div>
+  </div>
+  <div id="play" class="app" style="gap:12px">
+    <div class="stage"><canvas id="cv"></canvas></div>
+    <section class="narr" id="narr"></section>
+    <section class="choices" id="choices"></section>
+  </div>
+  <section class="end" id="end" hidden></section>
+</div>
+
+<script>
+(function(){
+var $=function(s){return document.querySelector(s)};
+var clamp=function(v){return Math.max(0,Math.min(100,v))};
+var pick=function(a){return a[(Math.random()*a.length)|0]};
+var shuffle=function(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=(Math.random()*(i+1))|0;var t=a[i];a[i]=a[j];a[j]=t}return a};
+
+var GOWN={shirt:'#a8c4d8',pants:'#a8c4d8',hair:'#8a8095',skin:'#e0ac86'};
+var DRIVER={shirt:'#e9e4d6',pants:'#3f4a5c',hair:'#2b2530',skin:'#d9a37c'};
+var DOC={shirt:'#f2f0f6',pants:'#4b4658',hair:'#2b2530',skin:'#e8b896'};
+var ALL=[
+ {ch:1,kind:'arcade',name:'社區騎樓',who:'鄰居',text:'出門沒幾步，騎樓裡有位鄰居邊走邊抽，煙霧順著騎樓一路飄向娃娃車。',accept:0.05,sign:false,tight:false,seed:3},
+ {ch:1,kind:'crossing',name:'紅綠燈口',who:'機車騎士',text:'紅燈。一排機車停在路口，其中一位邊等邊抽。人行道的角落只容得下你和娃娃車。',accept:0.04,sign:false,tight:true,seed:7},
+ {ch:1,kind:'store',name:'超商門口',who:'路人',text:'超商牆上貼著禁菸標誌，標誌旁邊，有人正抽著菸。',accept:0.04,sign:true,tight:false,seed:11},
+ {ch:1,kind:'find',name:'巷口',who:'',text:'轉進巷口，一股菸味飄了過來，可是眼前一個人也沒有。孩子皺起鼻子：「媽媽，好臭。」',accept:0.05,sign:false,tight:false,seed:4},
+ {ch:1,kind:'bus',name:'公車站牌',who:'候車民眾',text:'公車還有八分鐘才到。孩子被安排在下風處，煙就往那個方向飄。',accept:0.05,sign:false,tight:false,seed:5},
+ {ch:1,kind:'park',name:'公園',who:'長椅上的人',text:'終於到公園了。長椅旁就是兒童遊戲區，長椅上的人點起了一根菸。',accept:0.03,sign:true,tight:false,seed:9},
+ {ch:2,kind:'stairs',name:'醫院安全梯間',who:'病人',text:'帶孩子到醫院看診。電梯排了一長串人，您推著娃娃車改走無障礙通道，推開通往安全梯的防火門，煙味迎面而來。禁菸標誌貼在牆上，正下方的地上一堆菸蒂。有人穿著病人服，掛著點滴架，在這裡抽菸。',accept:0.07,sign:true,tight:true,dark:true,look:GOWN,seed:13},
+ {ch:2,kind:'taxi',name:'醫院門口計程車',who:'司機',text:'看完診，孩子累了，外頭又悶又熱。醫院門口排班的計程車旁，司機們聚在一起邊等邊抽，煙一團一團飄。排第一台的車，車內車外都是菸味。',accept:0.02,sign:false,tight:false,look:DRIVER,seed:15,ignoreLines:['司機瞄了您一眼：「我抽完這根就好啦。」','司機擺了臉色，轉過身繼續抽。']},
+ {ch:2,kind:'ride',name:'回程',who:'',text:'',accept:0,sign:false,tight:false,seed:6,nosmoker:true},
+ {ch:3,kind:'clinic',visit:1,name:'初診',smell:30,smellMin:0,lines:['「醫師，我牙齦又沒流血，應該還好吧？」'],text:'診間。病人坐上診療椅，一開口就是一股濃濃的菸味。三手菸附在衣服、頭髮和口氣上，您得近距離和病人工作一個小時。',data:{bop:9,cal:7},seed:21},
+ {ch:3,kind:'clinic',visit:2,name:'四週後回診',smell:45,smellMin:72,lines:['「醫師，我這禮拜有少抽喔。」','「等這陣子忙完我就戒。」'],text:'四週後回診。病人一坐上診療椅，那股味道又跳了出來，比上次還濃。',data:{bop:8,cal:7},seed:22},
+ {ch:3,kind:'clinic',visit:3,name:'三個月後複查',smell:40,smellMin:80,lines:['「我改抽加熱菸了，比較沒那麼傷啦。」'],text:'三個月後複查。您翻開病歷，對照著上次的紀錄。',data:{bop:8,cal:8},seed:23},
+ {ch:4,kind:'school',name:'學校門口',who:'接送的家長',text:'下班後去接孩子放學。校門口的圍牆上掛著「校園周邊禁菸」的布條，布條下方，一位等孩子的家長正點起菸，旁邊就是一排排小書包。',accept:0.05,sign:true,tight:false,seed:17},
+ {ch:4,kind:'find',name:'回家的巷子',who:'',text:'天黑了，巷子裡的燈忽明忽暗。煙味從前面飄過來，很濃，但看不到人。孩子已經睡著了，您不想讓他吸到。',accept:0.05,sign:false,tight:false,dark:true,seed:27},
+ {ch:4,kind:'market',name:'夜市入口',who:'攤販',text:'回家前繞進夜市買晚餐。人擠人，燈光昏黃，攤位旁的老闆一邊顧爐火一邊抽菸，煙味混著炸物的油煙，一路壓到孩子的臉上。',accept:0.03,sign:false,tight:true,dark:true,seed:19},
+ {ch:4,kind:'balcony',name:'社區樓下',who:'樓上住戶',elev:118,text:'終於到家樓下了。抬頭一看，三樓的陽台有一點紅光，煙正順著風，一路飄進一樓大廳。您不知道是哪一戶。',accept:0.04,sign:false,tight:false,dark:true,seed:25}
+];
+var SC=ALL;
+
+var S={};
+function reset(){
+  S.air=100;S.pat=100;S.time=100;S.puffs=0;S.passive=0;S.idx=0;S.passEv=0;S.ach=false;S.cab=0;S.ch3=false;S.smell=0;S.promise=0;S.edu=0;S.refer=0;S.referSent=0;S.scaleN=0;S.scaleQ=0;S.probed=false;S.line='';S.visit=1;
+  S.st={detour:0,road:0,rush:0,hits:0,tries:0,ok:0,photos:0,caught:0,reports:0};
+  hud();
+}
+function hud(){
+  var a=S.ch3?S.smell:S.air, ea=$('#b-air');
+  ea.style.width=a+'%';
+  ea.style.background=S.ch3?(S.smell>70?'var(--bad)':'var(--smoke)'):'';
+  ea.parentElement.classList.toggle('low',S.ch3?false:S.air<30);
+  $('#l-air').textContent=S.ch3?'身上味道':'寶寶空氣';
+  auSmoke(S.ch3?100-S.smell:S.air);
+  $('#v-air').textContent=Math.round(a);
+  [['pat',S.pat],['time',S.time]].forEach(function(p){
+    var el=$('#b-'+p[0]);el.style.width=p[1]+'%';
+    el.parentElement.classList.toggle('low',p[1]<30);
+    $('#v-'+p[0]).textContent=Math.round(p[1]);
+  });
+}
+function apply(d){
+  var a0=S.air;
+  if(d.air) S.air=clamp(S.air+((IDEAL&&d.air<0)?d.air*0.6:d.air));
+  if(d.pat) S.pat=clamp(S.pat+d.pat);
+  if(d.time) S.time=clamp(S.time+d.time);
+  var lost=a0-S.air, p=lost>0?Math.ceil(lost/3):0;
+  S.puffs+=p; hud(); return p;
+}
+function checkEnd(){ if(S.ch3){ if(S.smell>=100) return 'smell'; if(S.pat<=0) return 'pat'; if(S.time<=0) return 'time'; return null; } if(S.air<=0) return 'air'; if(S.pat<=0) return 'pat'; if(S.time<=0) return 'time'; return null; }
+
+/* ---------- DOM helpers ---------- */
+var narr=$('#narr'), choices=$('#choices');
+function head(){ var sc=SC[S.idx]; return '<div class="who">'+(['','章節一','章節二','章節三','章節四'][sc.ch])+' · '+sc.name+'（'+(S.idx+1)+'／'+SC.length+'）</div>'; }
+function say(h){ narr.innerHTML=h; }
+function setChoices(arr){
+  choices.innerHTML='';
+  arr.forEach(function(c){
+    var b=document.createElement('button');
+    b.className='choice'+(c.one?' one':'');
+    b.innerHTML='<b>'+c.t+'</b>'+(c.s?'<span>'+c.s+'</span>':'');
+    b.onclick=c.f; choices.appendChild(b);
+  });
+}
+function afterAction(msg,gov){
+  mode='scene';M={};
+  var r=checkEnd();
+  say(head()+'<p>'+msg+'</p>'+(gov?'<p class="gov">'+gov+'</p>':''));
+  if(r) setChoices([{t:'查看今日結算',one:true,f:function(){end(r)}}]);
+  else setChoices([{t:S.idx<SC.length-1?'繼續前進':'結束今天的行程',one:true,f:next}]);
+}
+
+/* ---------- 聲音（程式合成，無外部音檔） ---------- */
+var AU={c:null,m:null,nb:null,nodes:[],tm:[],lp:null,on:true,ch:1};
+try{ if(localStorage.getItem('snd')==='0') AU.on=false }catch(e){}
+function auInit(){
+  if(AU.c) { try{ if(AU.c.state==='suspended') AU.c.resume() }catch(e){} return; }
+  var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+  try{
+    AU.c=new AC(); AU.m=AU.c.createGain(); AU.m.gain.value=AU.on?0.5:0; AU.m.connect(AU.c.destination);
+    var n=AU.c.sampleRate*2, b=AU.c.createBuffer(1,n,AU.c.sampleRate), d=b.getChannelData(0);
+    for(var i=0;i<n;i++) d[i]=Math.random()*2-1;
+    AU.nb=b; auAmb(AU.ch);
+  }catch(e){ AU.c=null; }
+}
+function auSet(on){
+  AU.on=on; try{ localStorage.setItem('snd',on?'1':'0') }catch(e){}
+  if(AU.m) AU.m.gain.setTargetAtTime(on?0.5:0,AU.c.currentTime,0.05);
+  var b=$('#snd'); if(b) b.textContent=on?'聲音：開':'聲音：關';
+}
+function auStop(){
+  AU.tm.forEach(function(t){clearInterval(t)}); AU.tm=[];
+  AU.nodes.forEach(function(n){try{n.stop()}catch(e){}}); AU.nodes=[]; AU.lp=null;
+}
+function tone(f,dur,type,g,when,to){
+  if(!AU.c) return; var c=AU.c, t=c.currentTime+(when||0), o=c.createOscillator(), v=c.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(f,t); if(to) o.frequency.exponentialRampToValueAtTime(to,t+dur);
+  v.gain.setValueAtTime(0.0001,t); v.gain.exponentialRampToValueAtTime(g,t+0.01); v.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(v); v.connect(AU.m); o.start(t); o.stop(t+dur+0.05);
+}
+function nz(dur,g,ft,f,q,when,f2){
+  if(!AU.c||!AU.nb) return; var c=AU.c, t=c.currentTime+(when||0), s=c.createBufferSource(), fl=c.createBiquadFilter(), v=c.createGain();
+  s.buffer=AU.nb; fl.type=ft; fl.frequency.setValueAtTime(f,t); if(f2) fl.frequency.exponentialRampToValueAtTime(f2,t+dur); fl.Q.value=q||1;
+  v.gain.setValueAtTime(0.0001,t); v.gain.exponentialRampToValueAtTime(g,t+Math.min(0.02,dur/2)); v.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  s.connect(fl); fl.connect(v); v.connect(AU.m); s.start(t,Math.random()); s.stop(t+dur+0.05);
+}
+function sfx(k){
+  if(!AU.c||!AU.on) return;
+  if(k==='click') tone(1100,0.03,'sine',0.03);
+  else if(k==='hit'){ tone(95,0.28,'sine',0.22,0,45); nz(0.12,0.05,'lowpass',500,1); }
+  else if(k==='cough'){ for(var i=0;i<3;i++) nz(0.09,0.08,'bandpass',850,3,i*0.14); }
+  else if(k==='shutter'){ nz(0.03,0.1,'highpass',3000,1); nz(0.04,0.1,'highpass',2200,1,0.07); }
+  else if(k==='ding'){ tone(1568,0.6,'sine',0.05); tone(1175,0.7,'sine',0.04,0.14); }
+  else if(k==='bad') tone(190,0.3,'triangle',0.06,0,120);
+  else if(k==='wind') nz(1.1,0.07,'bandpass',300,2,0,1000);
+  else if(k==='warn'){ tone(660,0.08,'sine',0.04); tone(660,0.08,'sine',0.04,0.18); }
+  else if(k==='scrape') nz(0.08,0.09,'highpass',3000,1);
+  else if(k==='lighter'){ nz(0.02,0.07,'highpass',4000,1); tone(2400,0.02,'square',0.015,0.03); }
+  else if(k==='blip') tone(880,0.12,'sine',0.045);
+  else if(k==='end'){ tone(330,1.4,'sine',0.05,0,196); tone(262,1.6,'sine',0.04,0.2,147); }
+}
+function auAmb(ch){
+  AU.ch=ch; if(!AU.c) return; auStop();
+  var c=AU.c, f={1:110,2:98,3:82.4,4:73.4}[ch]||110;
+  var lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1200; lp.Q.value=0.5; AU.lp=lp;
+  var dg=c.createGain(); dg.gain.value=0.0001; dg.gain.setTargetAtTime(0.09,c.currentTime,1.5); lp.connect(dg); dg.connect(AU.m);
+  [[f,'sine'],[f*1.189,'sine'],[f*2.0,'triangle']].forEach(function(p,i){
+    var o=c.createOscillator(), v=c.createGain(); o.type=p[1]; o.frequency.value=p[0]; o.detune.value=(i-1)*4; v.gain.value=i===2?0.25:0.6;
+    o.connect(v); v.connect(lp); o.start(); AU.nodes.push(o);
+  });
+  var lf=c.createOscillator(), lg=c.createGain(); lf.frequency.value=0.07; lg.gain.value=0.03; lf.connect(lg); lg.connect(dg.gain); lf.start(); AU.nodes.push(lf);
+  if(AU.nb){
+    var s=c.createBufferSource(), fl=c.createBiquadFilter(), v2=c.createGain();
+    s.buffer=AU.nb; s.loop=true; fl.type=ch===3?'highpass':'lowpass'; fl.frequency.value=ch===3?5500:({1:420,2:800,4:300}[ch]||400);
+    v2.gain.value=ch===3?0.006:0.012; s.connect(fl); fl.connect(v2); v2.connect(AU.m); s.start(); AU.nodes.push(s);
+  }
+  if(ch===2) AU.tm.push(setInterval(function(){ if(AU.on) tone(1000,0.07,'sine',0.018) },5200));
+  if(ch===3) AU.tm.push(setInterval(function(){ if(AU.on) nz(0.025,0.04,'highpass',4500,1) },1000));
+}
+function auSmoke(v){ if(AU.lp&&AU.c) AU.lp.frequency.setTargetAtTime(220+Math.max(0,Math.min(100,v))*12,AU.c.currentTime,0.4); }
+window.addEventListener('pointerdown',function(e){
+  auInit();
+  var t=e.target; if(t&&t.closest&&t.closest('button')) sfx('click');
+},true);
+
+/* ---------- flow ---------- */
+function start(ch){
+  SC=(ch===1||ch===2||ch===3||ch===4)?ALL.filter(function(s){return s.ch===ch}):ALL;
+  reset(); $('#end').hidden=true; $('#play').hidden=false; $('.hud').style.display=''; parts.length=0;
+  enterScene(0);
+}
+function enterScene(i){
+  S.idx=i; mode='scene'; M={}; parts.length=0;
+  var sc=SC[i];
+  S.ch3=(sc.ch===3); hud();
+  auAmb(sc.ch); if(sc.kind!=='clinic'&&sc.kind!=='ride'&&sc.kind!=='find') sfx('lighter');
+  if(sc.kind==='clinic'){
+    S.time=100; S.visit=sc.visit; S.smell=clamp(Math.max(S.smell*0.5+sc.smell,sc.smellMin||0)); apply({pat:-5});
+    S.probed=false; S.line=pick(sc.lines); hud(); clinicSay(); clinicChoices(); return;
+  }
+  if(sc.kind==='ride'){
+    say(head()+'<p>'+(S.cab?'您坐進了第一台車。座椅、頭枕和車內的每個角落都有菸味，孩子開始咳。':'您叫的車沒有人在抽菸，但座椅上仍殘留著淡淡的味道。')+'</p>');
+    setChoices([{t:'車子開動',one:true,f:startRide}]);
+    return;
+  }
+  if(sc.kind==='find'){
+    sc.revealed=false; sc.elev=0; sc.who='';
+    say(head()+'<p>'+sc.text+'</p>');
+    setChoices([
+      {t:'循著味道找',s:'限時十秒，點可疑的地方，可能找不到',f:startFind},
+      {t:'不管它，繼續走',s:'味道還是會跟著您',f:function(){apply({air:-6,pat:-3,time:-3});afterAction('您決定不管了，帶著孩子快步走開。味道跟了好一段路。')}}
+    ]);
+    return;
+  }
+  say(head()+'<p>'+sc.text+'</p>');
+  var labs={detour:['繞路',sc.tight?'路口太窄，要多花時間':'安全但花時間'],rush:['加速通過','衝過煙霧（閃躲小遊戲）'],persuade:['勸阻','結果由骰子決定'],photo:['拍照檢舉','蒐證，再打電話檢舉']};
+  if(sc.kind==='stairs'){labs.detour=['轉身離開','改排另一部電梯，要等很久'];labs.persuade=['找警衛反映','看警衛怎麼說'];labs.photo=['拍照檢舉','光線暗、煙霧多，取景窗變小'];}
+  if(sc.kind==='taxi'){labs.detour=['改叫車軟體','要在路邊等十分鐘'];labs.rush=['上車','直接坐上第一台'];labs.persuade=['要求司機熄菸','結果由骰子決定'];}
+  if(sc.kind==='balcony'){labs.detour=['退到騎樓等','等煙散掉再進去'];labs.rush=['衝進大廳','閃躲小遊戲'];labs.persuade=['按對講機反映','不知道是哪一戶，結果由骰子決定'];}
+  setChoices([
+    {t:labs.detour[0],s:labs.detour[1],f:detour},
+    {t:labs.rush[0],s:labs.rush[1],f:rush},
+    {t:labs.persuade[0],s:labs.persuade[1],f:persuade},
+    {t:labs.photo[0],s:labs.photo[1],f:photo}
+  ]);
+}
+function next(){
+  var i=S.idx+1;
+  if(i>=SC.length){ end('done'); return; }
+  if(SC[i].ch!==SC[S.idx].ch){ chapterBreak(i); return; }
+  var fi=SC.length>=5?3:1;
+  var force=(i===fi&&S.passEv===0);
+  if((SC[i].ch<3||SC[i].ch===4)&&SC[i].kind!=='ride'&&(force||(i>=1&&Math.random()<0.4))){ S.passEv++; startPass(function(){enterScene(i)}); }
+  else enterScene(i);
+}
+
+/* ---------- 路線一：繞路 / 加速通過 ---------- */
+function detour(){
+  var sc=SC[S.idx]; S.st.detour++;
+  if(sc.kind==='stairs'){apply({air:-2,pat:-8,time:-14});return afterAction('您轉身離開，改排另一部電梯，多等了好一陣子。孩子開始吵著要回家。');}
+  if(sc.kind==='taxi'){apply({air:-1,pat:-8,time:-16});return afterAction('您改用叫車軟體，在路邊站著等了十分鐘。孩子靠在您身上，耐心條只剩一點。');}
+  if(sc.kind==='balcony'){apply({air:-2,pat:-6,time:-10});return afterAction('您抱著孩子退到騎樓，等那一陣煙散掉，再快步進大廳。電梯門打開，裡面還留著淡淡的菸味。');}
+  apply({air:-3,pat:-6,time:sc.tight?-18:-12});
+  if(Math.random()<(sc.tight?0.6:0.3)){
+    S.st.road++;
+    if(Math.random()<0.10){
+      apply({air:-10}); S.over=true;
+      say(head()+'<p>為了躲煙，您把娃娃車推下了人行道。</p><p>急煞聲與喇叭聲同時響起。</p><p class="gov">今日行程提早結束。</p>');
+      setChoices([{t:'查看今日結算',one:true,f:function(){end('road')}}]); mode='scene'; M={};
+    } else {
+      apply({air:-4,pat:-10});
+      afterAction('為了躲煙，您把娃娃車推下了人行道。一台車按著喇叭呼嘯而過，擦過娃娃車旁，寶寶被嚇哭。','您成功避開了二手菸。');
+    }
+  } else {
+    afterAction('您順利繞開了煙霧，多走了一段路。孩子問：「還沒到嗎？」');
+  }
+}
+function rush(){
+  if(SC[S.idx].kind==='taxi'){S.cab=1;apply({air:-8,pat:-3,time:-2});return afterAction('您硬著頭皮上了第一台車。座椅和車內都是菸味，孩子開始咳。','三手菸殘留的味道，會一路跟著您。');}
+  S.st.rush++; apply({time:-4});
+  say(head()+'<p>深吸一口氣，衝過去。</p><p class="gov">點下方的上下鈕切換車道（鍵盤可用上下鍵）。風會把煙吹向不同車道，轉向前箭頭會閃爍預警。</p>');
+  dodgeUI();
+  startMode('dodge',function(hits,sh){
+    S.st.hits+=hits; S.st.wind=(S.st.wind||0)+(sh||0);
+    apply({air:-hits*9,pat:-hits*3});
+    afterAction(hits?('穿越時吸到了 '+hits+' 團煙霧。'):'您毫髮無傷地穿過了煙霧，這在現實中並不常見。');
+  });
+}
+
+/* ---------- 路線二：勸阻 ---------- */
+function persuade(){
+  var sc=SC[S.idx]; if(sc.kind==='stairs') return guard(); S.st.tries++;
+  var r=Math.random(), acc=sc.accept*(IDEAL?4:1);
+  if(sc.kind==='find'&&sc.elev){ apply({air:-4,pat:-8}); return afterAction(pick(['您朝樓上喊了一聲，窗戶裡沒有人回應。','樓上的人探頭看了一眼，又縮回去，煙繼續飄。'])); }
+  if(sc.kind==='balcony'){
+    if(r<acc){ S.st.ok++; S.ach=true; apply({air:10,pat:5}); return afterAction('管理員聽完說：「好，我廣播一下。」過了一會兒，陽台的紅光熄了。','成就解鎖：今天有一個人聽進去。'); }
+    apply({air:-4,pat:-12,time:-4});
+    if(r<acc+0.35) return afterAction(pick(['管理員說：「是哪一戶？我們也不知道耶。」','管理員說：「陽台是人家家裡，我們不方便管。」','對講機另一頭：「我們家沒有抽啊，你搞錯了吧。」']));
+    return afterAction(pick(['對講機響了很久，沒有人接。','管理室的燈亮著，但沒有人在。']));
+  }
+  if(r<acc) return acceptGame();
+  if(r<acc+0.10){
+    apply({air:-6,pat:-25,time:-6});
+    return afterAction('對方站起身，一步一步逼近。您把娃娃車拉到身後，快步離開。寶寶被嚇到了。');
+  }
+  if(r<acc+0.45){
+    apply({air:-5,pat:-20});
+    return afterAction(pick(['對方回您：「關你什麼事？」','對方回您：「管很多耶，你有病喔。」','對方回您：「又沒抽到你。」'])+'周圍的人假裝沒聽見。');
+  }
+  apply({air:-4,pat:-8});
+  afterAction(pick(sc.ignoreLines||['對方瞄了您一眼，繼續抽。','對方翻了個白眼，把煙吐向另一邊，那邊還是您這邊。']));
+}
+function acceptGame(){
+  var lines=shuffle([
+    {t:'「不好意思，孩子在這裡，可以請您到旁邊的吸菸區嗎？」',ok:true},
+    {t:'「您這樣是違法的！」',ok:false},
+    {t:'「我要報警了喔！」',ok:false}
+  ]);
+  say(head()+'<p>對方抬起頭，沒有立刻回嘴，似乎願意聽您說一句。</p><p class="gov">稀有事件。您只有一句話的機會。</p>');
+  setChoices(lines.map(function(l){return {t:'說這一句',s:l.t,one:true,f:function(){
+    if(l.ok){
+      S.st.ok++; S.ach=true; apply({air:15,pat:10});
+      afterAction('對方愣了一下，把菸捻熄：「喔……好啦，抱歉。」','成就解鎖：今天有一個人聽進去。');
+    } else {
+      apply({pat:-5});
+      afterAction('對方說：「好啦好啦。」然後走到不遠處，繼續抽。');
+    }
+  }}}));
+}
+
+/* ---------- 路線三：拍照檢舉 ---------- */
+function photo(){
+  S.st.photos++; apply({time:-3});
+  say(head()+'<p>您悄悄舉起手機。</p><p class="gov">框住人、菸'+(SC[S.idx].sign?'、禁菸標誌':'')+'，按下快門。靠得越近越好拍，也越容易被發現。菸燒完就沒有證據了。</p>');
+  startMode('photo',function(res){
+    if(res==='ok'){ S.st.caught+=0; return report(); }
+    if(res==='retreat'){ apply({pat:-4}); return afterAction('您默默收起手機，離開了現場。'); }
+    if(res==='burnt'){ apply({pat:-8}); return afterAction('菸已經熄了。手機裡只有一張乾淨的街景。'); }
+    S.st.caught++;
+    var r=Math.random();
+    if(r<0.6){ apply({air:-3,pat:-20}); return afterAction(pick(['對方發現您在拍照：「拍什麼拍？」','對方發現您在拍照：「你有病喔，刪掉！」'])+'您低頭快步離開。'); }
+    if(r<0.9){ apply({air:-6,pat:-25,time:-6}); return afterAction('對方發現您在拍照，朝您走過來，伸手要搶手機。您抱緊手機，推著娃娃車快步離開。'); }
+    apply({pat:-2}); afterAction('對方發現您在拍照，愣了一下，把菸熄了，轉身走開。');
+  });
+  M.dark=!!SC[S.idx].dark;
+  photoUI();
+}
+function report(){
+  sfx('ding'); S.st.reports++; apply({time:-3});
+  var R={life:100,wk:Math.random()<0.5,hwk:false};
+  function screen(msg){
+    say(head()+'<p>'+msg+'</p><div class="burnwrap"><span>現場的菸</span><div class="burn"><i style="width:'+R.life+'%"></i></div></div>');
+    setChoices([
+      {t:'撥 110',s:'警察局',f:function(){call('police')}},
+      {t:'撥環保局',s:'',f:function(){call('eco')}},
+      {t:'撥衛生局',s:'',one:true,f:function(){call('health')}}
+    ]);
+  }
+  function call(u){
+    R.life=Math.max(0,R.life-28); apply({time:-5,pat:-4});
+    if(checkEnd()) return afterAction('撥了又撥，您的力氣和時間都用完了。',null);
+    if(u==='police') return screen('「這不是我們的管轄，菸害防制法是衛生局在處理。我幫您轉接。」嘟——您撥的電話將轉接至其他單位，請稍候。');
+    if(u==='eco') return screen(R.wk?'「環保局假日不上班，請平日再來電。」':'「我們這邊主要處理亂丟菸蒂，禁菸場所的違規吸菸，請洽衛生局。」');
+    if(R.wk&&!R.hwk){ R.hwk=true; return screen('「今天是假日，本局休息，請於上班日再來電。」您再撥一次，這次有人值班收件。'); }
+    apply({pat:-8});
+    var k=SC[S.idx].kind; if(k==='balcony') return afterAction('您把照片和時間傳給管委會。回覆是：「不確定是哪一戶，我們會在公布欄貼個公告。」','您的檢舉已受理，請等待十至三十個工作天。'); if(k==='stairs') return afterAction('衛生局已受理您的檢舉。院方回覆：「已加強巡查。」下次回診時，樓梯間的菸蒂還在原處。','您的檢舉已受理，請等待十至三十個工作天。'); if(k==='taxi') return afterAction('承辦人聽完說：「對方不在車上抽，也不在公告範圍內，這個狀況，我們再研究看看。」','您的檢舉已受理，請等待十至三十個工作天。'); afterAction('衛生局已受理您的檢舉，並請您上傳照片。稽查員抵達時，現場只剩一地菸蒂，行為人早已離開，無法裁處。','您的檢舉已受理，請等待十至三十個工作天。');
+  }
+  screen('拍到了。現在要檢舉，但您得先找對單位。');
+}
+
+function guard(){
+  S.st.guard=(S.st.guard||0)+1; apply({pat:-6,time:-4});
+  if(Math.random()<0.2){ apply({air:5}); return afterAction('警衛跟著您過去，把病人請回了病房。地上的菸蒂還在原處。','院方表示會加強巡查。'); }
+  afterAction('警衛嘆了口氣：「我們有勸過了，他們一下子又來。」','院方表示已加強巡查。');
+}
+function chapterBreak(i){
+  mode='scene'; M={};
+  if(SC[i].ch===4){
+    S.ch3=false; S.air=Math.max(S.air,80); S.pat=Math.max(S.pat,70); S.time=100; hud();
+    say('<div class="who">章節四 · 下班回家</div><p>下班了。您換下白袍，去學校接孩子，再一起回家。</p><p class="gov">這一章的地點是校園周邊、夜市和自家樓下，都是您每天會經過的地方。</p>');
+    setChoices([{t:'出發去接孩子',one:true,f:function(){enterScene(i)}}]);
+    return;
+  }
+  if(SC[i].ch===3){
+    say('<div class="who">章節三 · 診間篇</div><p>換您上班了。今天的病人，是您看過很多次的那一種：牙周很嚴重，一直在抽菸，一直說要戒。</p><p class="gov">從這一章起，您是牙周病醫師。身上的味道，會跟著您回家。</p>');
+    setChoices([{t:'走進診間',one:true,f:function(){enterScene(i)}}]);
+    return;
+  }
+  say('<div class="who">章節二 · 看診日</div><p>孩子今天要回診。從診間到回家，又是一趟推著娃娃車的路。</p><p class="gov">這一章的地點是醫院，原本該是最安全的地方。</p>');
+  setChoices([{t:'前往醫院',one:true,f:function(){enterScene(i)}}]);
+}
+function startRide(){
+  say(head()+'<p>車子開動了。</p><p class="gov">開窗可以讓味道散得快一點，但孩子會怕冷。</p>');
+  startMode('ride',function(r){
+    apply({air:-r.air,pat:-r.pat});
+    afterAction(S.cab?'車子終於停在家門口，孩子的咳聲一路沒停。衣服上的味道，要洗過才會散。':'車子停在家門口。孩子沒有咳得太厲害，但衣服上還是有淡淡的味道。','三手菸殘留，不需要有人當場在抽。');
+  });
+  rideUI();
+}
+function rideUI(){
+  choices.innerHTML='';
+  var b=document.createElement('button'); b.className='choice one';
+  function paint(){ b.innerHTML=M.open?'<b>關窗</b><span>孩子冷得縮起來了</span>':'<b>開窗通風</b><span>味道散得快，但孩子會怕冷，耐心下降</span>'; b.setAttribute('aria-pressed',String(!!M.open)); }
+  b.onclick=function(){ M.open=!M.open; paint(); };
+  paint(); choices.appendChild(b);
+}
+var IDEAL=false, CFGCH=0;
+function menu(){
+  auAmb(1);
+  SC=ALL; reset(); S.idx=0; mode='cover'; M={}; parts.length=0;
+  $('#end').hidden=true; $('#play').hidden=false; $('.hud').style.display='none';
+  say('<div class="who">文明社會觀光局 · 友善城市宣導</div>'
+    +'<p>歡迎來到文明的社會。這裡人人有公德心，處處是禁菸標誌，每一位市民都愛護孩子的健康。</p>'
+    +'<p class="gov">市民滿意度 98%（本數字為遊戲虛構）。請您安心帶著孩子出門。<br>本遊戲內容純屬虛構，如有雷同，那就是現實。</p>');
+  coverUI();
+}
+function coverUI(){
+  choices.innerHTML='';
+  function grp(t){var d=document.createElement('div');d.style.cssText='grid-column:1 / -1;font-size:11px;letter-spacing:.08em;color:var(--muted);margin-top:4px';d.textContent=t;choices.appendChild(d)}
+  function opt(t,s,on,f,list){
+    var b=document.createElement('button'); b.type='button'; b.className='choice'; b.innerHTML='<b>'+t+'</b>'+(s?'<span>'+s+'</span>':'');
+    b.setAttribute('aria-pressed',String(!!on));
+    b.onclick=function(){ f(); list.forEach(function(x){x.setAttribute('aria-pressed',String(x===b))}); };
+    list.push(b); choices.appendChild(b);
+  }
+  grp('情節設定：章節');
+  var L1=[], chs=[['完整一輪','四個章節接在一起',0],['章節一','逛街出門',1],['章節二','看診日',2],['章節三','診間篇',3],['章節四','下班回家',4]];
+  chs.forEach(function(c){ opt(c[0],c[1],CFGCH===c[2],function(){CFGCH=c[2]},L1); });
+  grp('情節設定：社會風氣');
+  var L2=[];
+  opt('公民課本版','人人有公德心：勸阻比較容易成功，煙霧傷害較小',IDEAL,function(){IDEAL=true},L2);
+  opt('現實版','維持原本的樣子',!IDEAL,function(){IDEAL=false},L2);
+  var go=document.createElement('button'); go.type='button'; go.className='choice one'; go.style.cssText='margin-top:6px;text-align:center'; go.innerHTML='<b>遊戲開始</b><span>祝您今天出門順利</span>';
+  go.onclick=function(){ start(CFGCH); }; choices.appendChild(go);
+}
+function drawCover(){
+  drawWorld('store',{seed:11,sign:true});
+  stroller(W*0.2,gy(),false);
+  smoker(smokerX(),gy(),'',0);
+  drawParts();
+  rect(0,0,W,30,C.panel,0.85);
+  text('歡迎來到文明社會　人人皆有公德心',W/2,20,C.fg,'center',13);
+}
+
+/* ---------- 章節三：診間 ---------- */
+function smell(d){ S.smell=clamp(S.smell+d); hud(); }
+function clinicSay(extra){
+  var sc=SC[S.idx], gov='';
+  if(sc.visit>=2){
+    gov='<p class="gov">'+(S.promise>0?('上次承諾：<s>戒菸</s>。病人已完成第 '+S.promise+' 次承諾戒菸，今日菸味指數：持續。'):'病人尚無戒菸承諾紀錄，今日菸味指數：持續。')+'</p>';
+  }
+  say(head()+'<p>'+sc.text+'</p><p>'+S.line+'</p>'+(extra||'')+gov);
+}
+function clinicChoices(){
+  var a=[];
+  if(!S.probed) a.push({t:'探測檢查',s:'先看牙周狀況（時間 -5）',f:probe});
+  a.push({t:'衛教戒菸',s:'結果由骰子決定',f:educate});
+  a.push({t:'牙根整平',s:'刮刀小遊戲，清除牙結石',f:scaleStart});
+  a.push({t:'轉介戒菸服務',s:'填轉介單',f:referral});
+  if(S.probed) a[a.length-1].one=true;
+  setChoices(a);
+}
+function probe(){
+  var sc=SC[S.idx]; S.probed=true; apply({time:-5});
+  clinicSay('<p>您一格一格量過去。病人說：「你看，沒流血吧。」全口探測出血 BOP：'+sc.data.bop+'%，最深探測附連水平：'+sc.data.cal+' mm（遊戲示意數字）。</p><p class="gov">吸菸會讓牙齦血管收縮，出血徵象常被壓低，牙齦看起來不太出血，但附連喪失和骨頭喪失仍然嚴重。</p>');
+  clinicChoices();
+}
+function educate(){
+  S.edu++; apply({time:-10,pat:-3});
+  var r=Math.random();
+  if(r<0.60){ S.promise++; return afterAction(pick(['病人笑著說：「好啦好啦，我會戒。」','病人說：「我真的有在少抽啦。」','病人點點頭：「等忙完這陣子，我就戒。」']),'戒菸承諾 +1。'); }
+  if(r<0.85){ apply({pat:-8}); return afterAction('病人擺擺手：「醫師你先治療啦，那個以後再說。」'); }
+  if(r<0.95){
+    if(Math.random()<0.4){ S.refer++; return afterAction('病人苦笑：「我抽很久了，現在戒也來不及了啦。」您慢慢說明現在開始還來得及，病人終於點頭，願意讓您轉介戒菸門診。','成功轉介 +1。'); }
+    return afterAction('病人苦笑：「我抽很久了，現在戒也來不及了啦。」您說了很多，病人只是安靜地聽，沒有答應。','至少，病人說了實話。');
+  }
+  S.refer++; afterAction('病人想了一下：「好，你幫我轉介看看。」','成功轉介 +1。');
+}
+function referral(){
+  S.referSent++; apply({time:-8,pat:-2});
+  if(Math.random()<0.15){ S.refer++; return afterAction('病人收下轉介單，說會去看看。','成功轉介 +1。'); }
+  afterAction('轉介單交給了櫃檯。三週後，沒有任何回音。','轉介單已送出，狀態：無下文。');
+}
+function scaleStart(){
+  apply({time:-20}); smell(8);
+  say(head()+'<p>您拿起刮刀，開始牙根整平。</p><p class="gov">刮刀掃過牙根，碰到牙結石的瞬間按「刮」。牙結石在另一側時，要先按「換邊」。刮到沒有結石的地方，會傷到牙齦。</p>');
+  startMode('scale',function(r){
+    var q=r.done/r.total; S.scaleN++; S.scaleQ+=q;
+    apply({pat:Math.round(q*8)-Math.min(r.miss*3,12)});
+    afterAction('牙根整平完成：清除 '+r.done+'／'+r.total+' 處牙結石，誤刮牙齦 '+r.miss+' 次。','手感很好。這是今天唯一確定有進展的事。');
+  });
+  scaleUI();
+}
+function dodgeUI(){
+  choices.innerHTML='';
+  function mk(t,s,d){var b=document.createElement('button');b.className='choice big';b.innerHTML='<b>'+t+'</b><span>'+s+'</span>';b.addEventListener('pointerdown',function(e){e.preventDefault();setLane(d)});choices.appendChild(b)}
+  mk('▲ 上','換到上一條車道',-1);
+  mk('▼ 下','換到下一條車道',1);
+}
+function scaleUI(){
+  choices.innerHTML='';
+  function mk(t,s,f){var b=document.createElement('button');b.className='choice big';b.innerHTML='<b>'+t+'</b><span>'+s+'</span>';b.addEventListener('pointerdown',function(e){e.preventDefault();f()});choices.appendChild(b)}
+  mk('換邊','換到牙根的另一側',function(){ if(mode==='scale'&&M.done) M.side=M.side?0:1; });
+  mk('刮','碰到牙結石的瞬間按下',scaleStroke);
+}
+function scaleStroke(){
+  if(mode!=='scale'||!M.done) return;
+  var hit=null;
+  M.bumps.forEach(function(b){ if(!b.done&&b.side===M.side&&Math.abs(b.y-M.y)<11&&(!hit||Math.abs(b.y-M.y)<Math.abs(hit.y-M.y))) hit=b; });
+  if(hit){hit.done=true;M.flash=0.2;M.ok=true;sfx('scrape')} else {M.miss++;M.flash=0.2;M.ok=false;sfx('bad')}
+}
+function end3(reason){
+  mode='scene';M={};
+  var T={
+    done:['三個月後的複查','您把三個月前的紀錄，和今天的數字並排放著。'],
+    smell:['味道太濃了','您頭暈得沒辦法繼續，今天的診只好提早結束。'],
+    pat:['提早下班','您的耐心用盡了。'],
+    time:['看診超時','後面還有一整排病人在等。']
+  }[reason]||['今天的門診結束',''];
+  var v=ALL.filter(function(s){return s.ch===3}), d0=v[0].data, d1=v[Math.max(0,Math.min(v.length-1,(S.visit||1)-1))].data;
+  $('#play').hidden=true; var e=$('#end'); e.hidden=false;
+  var avg=S.scaleN?Math.round(S.scaleQ/S.scaleN*100):0;
+  e.innerHTML=
+   '<h2>'+T[0]+'</h2><p class="sub">'+T[1]+'</p>'+
+   (reason==='done'?
+    '<dl class="stats">'+
+    '<dt>全口探測出血 BOP</dt><dd>'+d0.bop+'% → '+d1.bop+'%</dd>'+
+    '<dt>最深探測附連水平</dt><dd>'+d0.cal+' mm → '+d1.cal+' mm</dd>'+
+    '</dl><p class="sub">出血看起來少了，附連喪失卻沒有好轉。辛苦做的牙根整平，被一支又一支菸抵消了。數字為遊戲示意。</p>':'')+
+   '<dl class="stats">'+
+   '<dt>戒菸承諾／實際戒菸</dt><dd>'+S.promise+' 次／0 次</dd>'+
+   '<dt>衛教嘗試／成功轉介</dt><dd>'+S.edu+' 次／'+S.refer+' 次</dd>'+
+   '<dt>轉介單送出</dt><dd>'+S.referSent+' 張</dd>'+
+   '<dt>牙根整平／平均清除率</dt><dd>'+S.scaleN+' 次／'+avg+'%</dd>'+
+   '<dt>身上的味道</dt><dd>'+Math.round(S.smell)+'%</dd>'+
+   '</dl>'+
+   '<div class="risk"><div class="lab">今晚您將帶著第三手菸的味道回家</div><div class="num" style="font-size:22px">孩子說：「你身上好臭。」</div></div>'+
+   '<div class="real"><p>現實：吸菸會讓牙周治療後的癒合較差，也較容易復發。</p><p>國健署提供免費戒菸諮詢專線 0800-636363（戒菸撥 63），可以請病人撥打。</p></div>'+
+   '<button class="choice one big" id="again"><b>回到選單</b></button>';
+  $('#again').onclick=menu;
+}
+
+/* ---------- 隨機事件：迎面行人菸霧 ---------- */
+function startPass(after){
+  say('<div class="who">路上</div><p>迎面走來一位邊走邊抽的行人。左邊是牆，右邊停滿了機車，沒有地方可以閃。</p><p class="gov">按住憋氣。憋氣消耗耐心，放開就會吸到煙。</p>');
+  startMode('pass',function(m){
+    var p=apply({air:-m.air,pat:-m.pat}); S.passive+=p;
+    mode='scene';M={};
+    var r=checkEnd();
+    say('<div class="who">路上</div><p>您與菸霧完成了近距離交會，被動吸入 '+p+' 口。連選擇的機會都沒有。</p><p class="gov">感謝您的配合。</p>');
+    setChoices([{t:r?'查看今日結算':'繼續走',one:true,f:r?function(){end(r)}:after}]);
+  });
+  holdUI();
+}
+function holdUI(){
+  choices.innerHTML='';
+  var b=document.createElement('button'); b.className='choice one big';
+  b.innerHTML='<b>按住憋氣</b><span>放開就吸到一口</span>';
+  var on=function(e){e.preventDefault();if(M&&M.t!==undefined)M.hold=true;b.classList.add('on')};
+  var off=function(){if(M)M.hold=false;b.classList.remove('on')};
+  b.addEventListener('pointerdown',on);
+  ['pointerup','pointerleave','pointercancel'].forEach(function(ev){b.addEventListener(ev,off)});
+  choices.appendChild(b);
+}
+
+/* ---------- 結算 ---------- */
+function end(reason){
+  sfx('end');
+  if(S.ch3) return end3(reason);
+  mode='scene';M={};
+  var T={
+    done:SC[SC.length-1].ch===4?['今晚的行程結束','您帶著孩子回到了家。門一關，味道還在衣服上。']:['今日行程結束','您推著娃娃車走完了這一趟。'],
+    road:['今日行程提早結束','為了躲煙，您走下了人行道。'],
+    air:['提早回家','寶寶咳得停不下來，只好打道回府。'],
+    pat:['提早回家','孩子哭鬧不停，您也到極限了。'],
+    time:['行程取消','時間用完了，已經來不及到公園。']
+  }[reason]||['今日行程結束',''];
+  var st=S.st, risk=(S.puffs*0.0004).toFixed(3);
+  $('#play').hidden=true; var e=$('#end'); e.hidden=false;
+  e.innerHTML=
+   '<h2>'+T[0]+'</h2><p class="sub">'+T[1]+'</p>'+
+   '<div class="risk"><div class="lab">恭喜您！今日肺癌風險增加</div><div class="num">+'+risk+'%</div><small>本數字為遊戲虛構，非醫學估算。</small></div>'+
+   '<dl class="stats">'+
+   '<dt>勸阻成功／嘗試</dt><dd>'+st.ok+' 次／'+st.tries+' 次</dd>'+
+   '<dt>拍照蒐證／被發現</dt><dd>'+st.photos+' 次／'+st.caught+' 次</dd>'+
+   '<dt>檢舉／實際裁處</dt><dd>'+st.reports+' 次／0 次</dd>'+
+   '<dt>繞路／因此走下人行道</dt><dd>'+st.detour+' 次／'+st.road+' 次</dd>'+
+   '<dt>加速通過／吸到煙霧團</dt><dd>'+st.rush+' 次／'+st.hits+' 團</dd>'+
+   (st.guard?'<dt>找警衛反映</dt><dd>'+st.guard+' 次</dd>':'')+(st.wind?'<dt>閃躲時風向改變</dt><dd>'+st.wind+' 次（抽菸的人完全沒有移動）</dd>':'')+(st.lost?'<dt>找不到煙味源頭</dt><dd>'+st.lost+' 次</dd>':'')+(S.cab?'<dt>搭上有菸味的車</dt><dd>1 次</dd>':'')+
+   '<dt>吸入口數（其中被動）</dt><dd>'+S.puffs+' 口（'+S.passive+' 口）</dd>'+
+   '</dl>'+
+   (S.ach?'<div class="ach">成就解鎖：今天有一個人聽進去。</div>':'')+
+   '<div class="real"><p>現實：國民健康署指出，國內平均每年近 3,000 人死於二手菸害。</p>'+
+   '<p>在公告禁菸的場所遇到有人吸菸，可向當地衛生局檢舉，並附上照片或影片。</p>'+
+   '<p>蒐證請保持距離、不要正面衝突，感到危險就先離開並報警。</p></div>'+
+   '<button class="choice one big" id="again"><b>回到選單</b></button>';
+  $('#again').onclick=menu;
+}
+
+/* ---------- canvas ---------- */
+var cv=$('#cv'), ctx=cv.getContext('2d'), W=360, H=230, dpr=1;
+var mode='scene', M={}, parts=[], last=0, frame=0, C={};
+function resize(){
+  var r=cv.getBoundingClientRect(); if(!r.width) return;
+  W=r.width;H=r.height;dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+if(window.ResizeObserver) new ResizeObserver(resize).observe(cv); window.addEventListener('resize',resize); resize();
+function readColors(){
+  var s=getComputedStyle(document.documentElement);
+  ['bg','sky','panel','fg','muted','line','smoke','accent','good','warn','bad','ground','building'].forEach(function(k){C[k]=s.getPropertyValue('--'+k).trim()||'#888'});
+}
+readColors();
+var FONT='600 12px "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
+
+function rect(x,y,w,h,f,a){ctx.globalAlpha=a==null?1:a;ctx.fillStyle=f;ctx.fillRect(x,y,w,h);ctx.globalAlpha=1}
+function circ(x,y,r,f,a){ctx.globalAlpha=a==null?1:a;ctx.fillStyle=f;ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fill();ctx.globalAlpha=1}
+function line(x1,y1,x2,y2,c,w,a){ctx.globalAlpha=a==null?1:a;ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.globalAlpha=1}
+function text(s,x,y,c,al,sz){ctx.font=sz?FONT.replace('12px',sz+'px'):FONT;ctx.fillStyle=c;ctx.textAlign=al||'left';ctx.fillText(s,x,y)}
+
+var skyArr=[], skyKey='';
+function skyline(seed){
+  var key=seed+'|'+(W|0); if(key===skyKey) return skyArr; skyKey=key;
+  var s=seed*9301+49297, rnd=function(){s=(s*9301+49297)%233280;return s/233280};
+  var a=[], x=-10; while(x<W+10){var w=36+rnd()*50,h=44+rnd()*76;a.push({x:x,w:w,h:h});x+=w+4} skyArr=a; return a;
+}
+function gy(){return H*0.8}
+function smokerX(){var s=SC&&SC[S.idx||0]; return (s&&s.kind==='find'&&s.revealed)?s.sx:W*0.72}
+function signX(){return smokerX()-W*0.1}
+
+var LOOKS=[
+ {shirt:'#7f93b5',pants:'#4b4658',hair:'#2b2530',skin:'#e8b896'},
+ {shirt:'#b58a7d',pants:'#3f4a5c',hair:'#4a3b32',skin:'#d9a37c'},
+ {shirt:'#86a58f',pants:'#4b4658',hair:'#6b6070',skin:'#f0c9a6'},
+ {shirt:'#a58fb5',pants:'#3f4a5c',hair:'#2b2530',skin:'#e0ac86'},
+ {shirt:'#c4a65f',pants:'#4b4658',hair:'#4a3b32',skin:'#e8b896'}
+];
+var PARENT={shirt:'#6fa3a0',pants:'#4b4658',hair:'#2b2530',skin:'#e8b896'};
+function rr(x,y,w,h,r,f){
+  ctx.fillStyle=f;ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.fill();
+}
+function figure(x,g,o){
+  var d=o.dir||-1,L=o.look,st=o.step||0;
+  if(o.sit){
+    line(x-d*2,g-19,x+d*9,g-19,L.pants,5.5); line(x+d*9,g-19,x+d*8,g-4,L.pants,5.5);
+    line(x-d*2,g-17,x+d*7,g-16,L.pants,5.5); line(x+d*7,g-16,x+d*6,g-4,L.pants,5.5);
+    ctx.fillStyle='#2f2a38';ctx.beginPath();ctx.ellipse(x+d*9,g-2.5,5,2.5,0,0,6.2832);ctx.fill();
+  } else {
+    ctx.globalAlpha=0.18;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(x,g+1,13,3,0,0,6.2832);ctx.fill();ctx.globalAlpha=1;
+    line(x-3.5,g-19,x-4.5+st,g-3,L.pants,5.5); line(x+3.5,g-19,x+4.5-st,g-3,L.pants,5.5);
+    ctx.fillStyle='#2f2a38';
+    ctx.beginPath();ctx.ellipse(x-4.5+st+d*2,g-1.5,5,2.5,0,0,6.2832);ctx.fill();
+    ctx.beginPath();ctx.ellipse(x+4.5-st+d*2,g-1.5,5,2.5,0,0,6.2832);ctx.fill();
+  }
+  line(x-d*3,g-39,x-d*5,g-25,L.shirt,4.4); circ(x-d*5,g-24,2.2,L.skin);
+  rr(x-8,g-45,16,28,6,L.shirt);
+  if(o.arm==='mouth'){
+    line(x+d*3,g-39,x+d*8,g-36,L.shirt,4.4); line(x+d*8,g-36,x+d*6,g-46,L.shirt,4.4); circ(x+d*6,g-46.5,2.2,L.skin);
+  } else if(o.arm==='push'){
+    line(x+d*3,g-39,x+d*13,g-35,L.shirt,4.4); circ(x+d*14,g-35,2.2,L.skin);
+  } else { line(x+d*3,g-39,x+d*5,g-25,L.shirt,4.4); circ(x+d*5,g-24,2.2,L.skin); }
+  circ(x,g-52,8.5,L.skin);
+  ctx.fillStyle=L.hair;ctx.beginPath();ctx.arc(x,g-52,9,Math.PI*1.03,Math.PI*1.97);ctx.closePath();ctx.fill();
+  circ(x-d*4.5,g-53,5.5,L.hair);
+  circ(x+d*3.5,g-52,1.15,'#2b2530');
+}
+function stroller(x,y,hurt){
+  figure(x-40,y,{look:PARENT,dir:1,arm:'push'});
+  line(x-26,y-35,x-13,y-23,'#5a5468',3);
+  rr(x-17,y-30,36,19,8,'#8fa8c4');
+  ctx.fillStyle='#6f88a8';ctx.beginPath();ctx.arc(x-1,y-27,13,Math.PI,Math.PI*2);ctx.closePath();ctx.fill();
+  circ(x+7,y-27,6.5,hurt?C.bad:'#e8b896');
+  ctx.fillStyle='#f2d27a';ctx.beginPath();ctx.arc(x+7,y-27,6.8,Math.PI*1.05,Math.PI*1.95);ctx.closePath();ctx.fill();
+  if(hurt) line(x+5,y-24,x+9,y-24,'#2b2530',1.4);
+  line(x-12,y-11,x-10,y-6,'#5a5468',2.5); line(x+14,y-11,x+12,y-6,'#5a5468',2.5);
+  circ(x-10,y-6,6,'#3b3646'); circ(x+12,y-6,6,'#3b3646'); circ(x-10,y-6,2,'#9a93a8'); circ(x+12,y-6,2,'#9a93a8');
+}
+function cig(x,g){
+  var y=g-47;
+  line(x-6,y,x-15,y,'#000',4,0.22);
+  line(x-6,y,x-14,y,'#f7f5fa',2.6);
+  line(x-14,y,x-16.5,y,C.accent,2.8);
+}
+function bike(x,g,col){
+  circ(x-24,g-9,9,'#3b3646'); circ(x+22,g-9,9,'#3b3646'); circ(x-24,g-9,3,'#9a93a8'); circ(x+22,g-9,3,'#9a93a8');
+  line(x-24,g-9,x-18,g-32,'#5a5468',3); line(x-22,g-33,x-13,g-33,'#5a5468',3);
+  rr(x-17,g-25,36,13,5,col); rr(x-1,g-29,26,6,3,'#3b3646');
+  circ(x-20,g-30,3,'#f2d27a');
+}
+function smoker(x,g,label,look,sit){
+  var g2=sit?g-7:g;
+  figure(x,g2,{look:(typeof look==='object'?look:LOOKS[look%LOOKS.length]),dir:-1,arm:'mouth',sit:sit});
+  cig(x,g2);
+  if(label) text(label,x,g2-66,C.muted,'center',11);
+}
+function signBoard(x,g){
+  line(x,g,x,g-46,C.muted,3); circ(x,g-58,13,C.panel);
+  ctx.strokeStyle=C.accent;ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,g-58,12,0,6.2832);ctx.stroke();
+  line(x-8,g-66,x+8,g-50,C.accent,3);
+}
+function drawWorld(kind,sc){
+  var g=gy();
+  rect(0,0,W,H,C.sky);
+  if(kind!=='arcade'&&kind!=='stairs'){
+    skyline(sc?sc.seed:2).forEach(function(b){
+      rect(b.x,g-b.h,b.w,b.h,C.building);
+      for(var r=0;r<3;r++)for(var c=0;c<2;c++) rect(b.x+8+c*(b.w/2-4),g-b.h+10+r*18,5,7,C.sky,0.7);
+    });
+  }
+  rect(0,g,W,H-g,C.ground);
+  if(kind==='arcade'){
+    rect(0,H*0.08,W,H*0.14,C.building);
+    [0.08,0.38,0.68,0.95].forEach(function(f){rect(W*f-5,H*0.22,10,g-H*0.22,C.building)});
+  } else if(kind==='crossing'){
+    rect(W*0.46,g-90,4,90,C.muted); rect(W*0.43,g-110,16,36,C.building); circ(W*0.45,g-100,4.5,C.accent);
+    bike(W*0.54,g,'#8a8498'); bike(smokerX(),g,'#7d8aa3');
+  } else if(kind==='store'){
+    rect(W*0.42,H*0.22,W*0.6,g-H*0.22,C.building); rect(W*0.42,H*0.22,W*0.6,16,C.muted,0.5);
+    text('超商',W*0.46,H*0.22+12,C.panel,'left',11); rect(W*0.84,g-62,W*0.12,62,C.sky,0.8);
+  } else if(kind==='bus'){
+    rect(W*0.34,g-72,W*0.36,5,C.muted); rect(W*0.34,g-72,4,72,C.muted); rect(W*0.7-4,g-72,4,72,C.muted);
+    rect(W*0.46,g-96,18,24,C.panel); text('站牌',W*0.46+9,g-79,C.fg,'center',10);
+  } else if(kind==='park'){
+    rect(W*0.3-3,g-34,6,34,C.muted); circ(W*0.3,g-52,26,C.good,0.45);
+    rect(W*0.88,g-44,3,44,C.muted); rect(W*0.97,g-44,3,44,C.muted); line(W*0.88,g-44,W*0.97,g-44,C.muted,3);
+    line(W*0.915,g-44,W*0.915,g-14,C.muted,1.5); line(W*0.945,g-44,W*0.945,g-14,C.muted,1.5);
+    rect(smokerX()-26,g-14,52,5,C.muted);
+  } else if(kind==='stairs'){
+    rect(0,0,W,g,C.building); rect(0,g-8,W,8,C.ground,0.6);
+    for(var k=0;k<7;k++) rect(W*0.04+k*W*0.05,g-(k+1)*10,W*0.05+1,(k+1)*10,C.ground);
+    rect(W*0.84,g-86,W*0.12,86,C.muted,0.45);
+  } else if(kind==='school'){
+    rect(0,H*0.3,W,g-H*0.3,C.building,0.6); rect(0,H*0.3,W,12,C.muted,0.6);
+    for(var q=0;q<12;q++) line(W*0.02+q*W*0.085,g-70,W*0.02+q*W*0.085,g,C.muted,2);
+    rect(0,g-70,W,4,C.muted); rect(W*0.2,H*0.14,W*0.6,26,C.panel,0.9);
+    text('禁菸 · 校園周邊',W*0.5,H*0.14+17,C.accent,'center',12);
+  } else if(kind==='market'){
+    rect(W*0.28,H*0.22,W*0.72,14,C.accent,0.7); rect(W*0.28,H*0.22+14,4,g-H*0.22-14,C.muted); rect(W*0.98,H*0.22+14,4,g-H*0.22-14,C.muted);
+    [0.38,0.52,0.66,0.8,0.92].forEach(function(f){circ(W*f,H*0.22+30,6,'#e0b84a',0.9)});
+    rect(W*0.4,g-40,W*0.3,40,C.building); rect(W*0.4,g-44,W*0.3,6,C.muted);
+  } else if(kind==='balcony'){
+    rect(W*0.32,0,W*0.68,g,C.building); 
+    for(var r=0;r<4;r++)for(var c=0;c<3;c++) rect(W*0.36+c*W*0.2,H*0.06+r*H*0.18,W*0.1,H*0.09,C.sky,0.6);
+    var by=g-(sc.elev||0)+4; rect(smokerX()-W*0.14,by,W*0.28,6,C.muted); for(var k=0;k<7;k++) line(smokerX()-W*0.14+k*W*0.28/6,by-34,smokerX()-W*0.14+k*W*0.28/6,by,C.muted,2); line(smokerX()-W*0.14,by-34,smokerX()+W*0.14,by-34,C.muted,3);
+  } else if(kind==='find'){
+    rect(0,H*0.18,W*0.3,g-H*0.18,C.building,0.7); rect(W*0.3+W*0.7*0,g-3,W,3,C.muted,0.4);
+  } else if(kind==='taxi'){
+    rect(0,H*0.2,W*0.44,g-H*0.2,C.building); rect(0,H*0.2,W*0.44,14,C.muted,0.6); text('門診大樓',W*0.22,H*0.2+11,C.panel,'center',11);
+    rect(W*0.08,g-62,W*0.28,62,C.sky,0.8);
+    car(W*0.58,g,'#e0b84a'); car(W*0.97,g,'#e0b84a');
+  }
+  if(sc&&sc.sign){ if(kind==='stairs') wallSign(signX(),g); else signBoard(signX(),g); }
+}
+
+/* particles */
+function tip(){
+  if(mode==='pass') return {x:M.wx-17,y:gy()-48};
+  var sc=SC[Math.min(S.idx||0,SC.length-1)];
+  if(sc.kind==='clinic') return {x:W*0.62+46,y:gy()-78};
+  return {x:smokerX()-17,y:gy()-48-(sc.kind==='crossing'?7:0)-(sc.elev||0)};
+}
+function updParts(dt){
+  var scx=SC[Math.min(S.idx||0,SC.length-1)];
+  if((mode==='scene'||mode==='photo'||mode==='pass'||mode==='cover')&&!(mode==='scene'&&scx&&scx.kind==='find'&&!scx.revealed)){
+    M.acc=(M.acc||0)+dt*(mode==='pass'?60:38);
+    while(M.acc>=1&&parts.length<160){M.acc--;var t=tip();parts.push({x:t.x,y:t.y,r:3,a:0.55,vx:-(18+Math.random()*26),vy:-(6+Math.random()*14)})}
+  }
+  parts.forEach(function(p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=dt*7;p.a-=dt*0.14});
+  parts=parts.filter(function(p){return p.a>0&&p.x>-30});
+}
+function drawParts(){parts.forEach(function(p){circ(p.x,p.y,p.r,C.smoke,Math.max(0,p.a))})}
+
+/* modes */
+function startMode(m,done){
+  mode=m; parts.length=0;
+  if(m==='find') M={t:0,dur:10,spots:findSpots(),checked:[],src:Math.random()<0.25?-1:Math.floor(Math.random()*5),hint:0,msg:'',air:0,done:done};
+  if(m==='dodge') M={t:0,dur:8,lane:1,clouds:[],spawn:0.4,hits:0,flash:0,wind:0,nextWind:Math.random()<0.5?-1:1,wt:2.4,shifts:0,done:done};
+  if(m==='photo') M={t:0,burn:8,risk:0,near:true,msg:'',msgT:0,fx:W*0.5,done:done};
+  if(m==='pass') M={t:0,dur:4.2,hold:false,air:0,pat:0,wx:W+30,done:done};
+  if(m==='scale'){ var bs=[]; for(var i=0;i<6;i++) bs.push({y:H*(0.3+i*0.085)+Math.random()*4,side:i%2,done:false}); M={t:0,dur:12,bumps:bs,miss:0,y:H*0.2,flash:0,ok:true,side:0,done:done}; }
+  if(m==='ride') M={t:0,dur:7,open:false,f:S.cab?1:0.4,air:0,pat:0,haze:S.cab?0.8:0.3,done:done};
+}
+function findSpots(){
+  var g=gy();
+  return [
+    {x:W*0.38,y:g-18,l:'垃圾桶後',who:'躲在垃圾桶後的人',k:'bin'},
+    {x:W*0.54,y:g-26,l:'路邊的車',who:'坐在車裡的駕駛',k:'car'},
+    {x:W*0.7,y:g-118,l:'樓上窗口',who:'樓上窗邊的住戶',k:'win',elev:100},
+    {x:W*0.84,y:g-18,l:'草叢旁',who:'蹲在草叢旁的人',k:'bush'},
+    {x:W*0.95,y:g-34,l:'轉角',who:'轉角後的路人',k:'corner'}
+  ];
+}
+function startFind(){
+  apply({time:-4});
+  say(head()+'<p>您停下腳步，用鼻子找方向。</p><p class="gov">點可疑的地方，上方的味道條會告訴您有沒有靠近。十秒內找不到，味道就會一直跟著您。有時候，真的找不到。</p>');
+  choices.innerHTML='';
+  startMode('find',function(res,air,sp){
+    apply({air:-Math.round(air)});
+    if(res==='found'){
+      sfx('blip'); var sc=SC[S.idx]; sc.revealed=true; sc.sx=sp.x; sc.who=sp.who; sc.elev=sp.elev||0;
+      mode='scene'; M={}; parts.length=0;
+      say(head()+'<p>找到了，是'+sp.who+'。</p>');
+      setChoices([
+        {t:'拍照檢舉',s:'蒐證，再打電話檢舉',f:photo},
+        {t:'上前勸阻',s:'結果由骰子決定',f:persuade},
+        {t:'算了，帶孩子離開',s:'至少知道味道從哪裡來',f:function(){apply({pat:-4,time:-2});afterAction('您帶著孩子轉身離開。')}}
+      ]);
+    } else {
+      S.st.lost=(S.st.lost||0)+1; apply({pat:-8});
+      afterAction('十秒過去了，您還是沒找到。味道到處都是，又好像哪裡都不是。','找不到源頭，就無從勸阻，也無從檢舉。');
+    }
+  });
+}
+function findTap(x,y){
+  if(mode!=='find'||!M.done) return;
+  var best=-1,bd=48;
+  M.spots.forEach(function(s,i){var d=Math.hypot(s.x-x,s.y-y); if(d<bd){bd=d;best=i}});
+  if(best<0||M.checked.indexOf(best)>=0) return;
+  M.checked.push(best); M.t+=1; M.air+=3;
+  if(best===M.src){ M.hint=1; return finishFind('found'); }
+  if(M.src<0){ M.hint=0.3+Math.random()*0.1; M.msg='味道到處都是，這裡也不是。'; return; }
+  var d=Math.abs(best-M.src);
+  M.hint=d===1?0.75:d===2?0.5:0.28;
+  M.msg=d===1?'味道變濃了，應該在附近。':d===2?'味道差不多，不確定。':'味道變淡了，方向不對。';
+}
+function finishFind(res){ var d=M.done; if(!d) return; M.done=null; var a=M.air,sp=M.spots[M.src]; mode='scene'; d(res,a,sp); }
+function updFind(dt){
+  if(!M.done) return;
+  M.t+=dt; M.air+=dt*1.5; M.hint=M.hint*0.995;
+  if(M.t>=M.dur) finishFind('lost');
+}
+function drawFind(){
+  var g=gy(), sc=SC[S.idx];
+  drawWorld('find',sc);
+  M.spots.forEach(function(s,i){
+    var ck=M.checked.indexOf(i)>=0;
+    ctx.globalAlpha=ck?0.45:1;
+    if(s.k==='bin'){ rr(s.x-12,g-26,24,26,3,C.muted); rect(s.x-14,g-30,28,5,C.muted); }
+    else if(s.k==='car'){ car(s.x,g,'#8a9db5'); }
+    else if(s.k==='win'){ rect(s.x-20,g-150,40,48,C.panel); rect(s.x-17,g-147,34,42,C.sky,0.8); rect(s.x-24,g-100,48,5,C.muted); }
+    else if(s.k==='bush'){ circ(s.x-8,g-12,14,C.good,0.55); circ(s.x+8,g-14,16,C.good,0.55); }
+    else if(s.k==='corner'){ rect(s.x-10,g-90,W*0.07,90,C.building); }
+    ctx.globalAlpha=1;
+    text(ck?'✓ '+s.l:s.l,s.x,s.y+(s.k==='win'?72:(s.k==='corner'?58:26))+(s.k==='bin'||s.k==='bush'?4:0),C.muted,'center',10);
+    if(!ck){ ctx.strokeStyle=C.accent;ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.beginPath();ctx.arc(s.x,s.k==='win'?g-126:(s.k==='corner'?g-45:s.y-4),22,0,6.2832);ctx.stroke();ctx.setLineDash([]); }
+  });
+  stroller(W*0.2,g,false);
+  for(var j=0;j<6;j++) circ(W*(0.3+j*0.11),g-40-Math.sin(M.t*2+j)*10,18+M.hint*14,C.smoke,0.08+M.hint*0.14);
+  text('味道',12,H*0.07,C.fg,'left',11); rect(44,H*0.04,W*0.4,6,C.line,0.8); rect(44,H*0.04,W*0.4*M.hint,6,C.accent);
+  text('剩 '+Math.max(0,Math.ceil(M.dur-M.t))+' 秒',W-12,H*0.07,C.fg,'right',11);
+  if(M.msg) text(M.msg,W/2,H*0.16,C.fg,'center',12);
+}
+function laneY(i){return H*(0.52+i*0.15)}
+function setLane(d){ if(mode==='dodge') M.lane=Math.max(0,Math.min(2,M.lane+d)); }
+cv.addEventListener('pointerdown',function(e){
+  if(mode==='find'){e.preventDefault();var fr=cv.getBoundingClientRect();findTap(e.clientX-fr.left,e.clientY-fr.top);return}
+  if(mode==='scale'){e.preventDefault();scaleStroke();return}
+  if(mode!=='dodge') return; e.preventDefault();
+  var r=cv.getBoundingClientRect(); setLane((e.clientY-r.top)<r.height/2?-1:1);
+});
+window.addEventListener('keydown',function(e){
+  if(e.key==='ArrowUp'){setLane(-1);if(mode==='dodge')e.preventDefault()}
+  if(e.key==='ArrowDown'){setLane(1);if(mode==='dodge')e.preventDefault()}
+});
+
+function updDodge(dt){
+  M.t+=dt; M.spawn-=dt;
+  if(M.spawn<=0&&M.t<M.dur-1){M.clouds.push({x:W+30,lane:0,ly:0,r:20+Math.random()*10,hit:false,v:130+M.t*12+Math.random()*30});M.spawn=0.5+Math.random()*0.4; var c0=M.clouds[M.clouds.length-1]; c0.lane=(Math.random()*3)|0; c0.ly=c0.lane}
+  M.wt-=dt; if(M.wt<1.2&&!M.warned){M.warned=true;sfx('warn')}
+  if(M.wt<=0){ M.wind=M.nextWind; M.shifts++; M.warned=false; sfx('wind'); var o=[-1,0,1].filter(function(v){return v!==M.wind}); M.nextWind=o[(Math.random()*o.length)|0]; M.wt=2.4; }
+  var sx=W*0.2;
+  M.clouds.forEach(function(c){c.x-=c.v*dt;c.ly=Math.max(-0.3,Math.min(2.3,c.ly+M.wind*0.55*dt));if(!c.hit&&Math.abs(c.ly-M.lane)<0.55&&Math.abs(c.x-sx)<c.r+14){c.hit=true;M.hits++;M.flash=0.35;sfx('hit');sfx('cough')}});
+  M.clouds=M.clouds.filter(function(c){return c.x>-60});
+  M.flash=Math.max(0,M.flash-dt);
+  if(M.t>=M.dur&&M.done){var d=M.done,h=M.hits,sh=M.shifts;M.done=null;d(h,sh)}
+}
+function drawDodge(){
+  rect(0,0,W,H,C.sky); rect(0,H*0.42,W,H*0.58,C.ground);
+  line(0,H*0.595,W,H*0.595,C.line,1.5,0.9); line(0,H*0.745,W,H*0.745,C.line,1.5,0.9);
+  M.clouds.forEach(function(c){var y=laneY(c.ly)-22;circ(c.x,y,c.r,C.smoke,0.75);circ(c.x+c.r*0.7,y+4,c.r*0.75,C.smoke,0.7);circ(c.x-c.r*0.6,y+5,c.r*0.7,C.smoke,0.7)});
+  stroller(W*0.2,laneY(M.lane),M.flash>0);
+  rect(12,10,W-24,6,C.line,0.9); rect(12,10,(W-24)*Math.min(1,M.t/M.dur),6,C.smoke);
+  text('換車道躲開煙霧，右上角箭頭是風向',W/2,34,C.muted,'center',11);
+  var warn=M.wt<1.2, blink=Math.floor(M.t*6)%2===0;
+  var arr=function(w){return w<0?'↑':(w>0?'↓':'無風')};
+  text('風向 '+arr(M.wind),W-14,H*0.2,C.fg,'right',13);
+  if(warn&&blink) text('即將轉為 '+arr(M.nextWind),W-14,H*0.2+18,C.accent,'right',12);
+  if(M.wind!==0) for(var k=0;k<5;k++){var wx=((M.t*140+k*80)%W), wy=H*0.46+((k*37)%90); line(wx,wy,wx+14,wy+M.wind*10,C.panel,1.5,0.5)}
+  if(M.flash>0) rect(0,0,W,H,C.bad,M.flash*0.5);
+}
+
+function frameW(){return W*(M.near?0.36:0.24)*(M.dark?0.85:1)}
+function photoLR(){
+  var sx=smokerX(),L=sx-26,R=sx+14;
+  if(SC[S.idx].sign) L=Math.min(L,signX()-14);
+  return [L,R];
+}
+function updPhoto(dt){
+  if(!M.done) return;
+  M.t+=dt; M.burn-=dt; M.msgT=Math.max(0,M.msgT-dt);
+  M.risk+=dt*(M.near?24:10);
+  M.fx=W*0.5+Math.sin(M.t*1.5)*W*0.36;
+  if(M.risk>=100) finishPhoto('caught'); else if(M.burn<=0) finishPhoto('burnt');
+}
+function finishPhoto(res){ if(!M.done) return; var d=M.done; M.done=null; d(res); }
+function shutter(){
+  if(mode!=='photo'||!M.done) return;
+  var lr=photoLR(),fw=frameW();
+  if(M.fx-fw/2<=lr[0]&&M.fx+fw/2>=lr[1]){ sfx('shutter'); finishPhoto('ok'); }
+  else{sfx('bad');M.risk=Math.min(100,M.risk+12);M.msg='沒拍到完整的畫面';M.msgT=1.1}
+}
+function setNear(v){M.near=v;syncPhoto()}
+function syncPhoto(){choices.querySelectorAll('[data-k]').forEach(function(b){b.setAttribute('aria-pressed',String((b.dataset.k==='near')===M.near))})}
+function photoUI(){
+  choices.innerHTML='';
+  function mk(t,s,f,k){var b=document.createElement('button');b.className='choice';b.innerHTML='<b>'+t+'</b><span>'+s+'</span>';b.onclick=f;if(k)b.dataset.k=k;choices.appendChild(b)}
+  mk('靠近拍','好拍，但容易被發現',function(){setNear(true)},'near');
+  mk('保持距離','安全，但取景窗變小',function(){setNear(false)},'far');
+  mk('按下快門','框住人、菸'+(SC[S.idx].sign?'、標誌':''),shutter);
+  mk('撤退','放棄這次蒐證',function(){finishPhoto('retreat')});
+  syncPhoto();
+}
+function drawPhoto(){
+  if(M.dark) rect(0,0,W,H,'#000',0.22);
+  var fw=frameW(),fh=H*0.62,fx=M.fx-fw/2,fy=H*0.14;
+  ctx.globalAlpha=0.35;ctx.fillStyle='#000';
+  ctx.fillRect(0,0,W,fy);ctx.fillRect(0,fy+fh,W,H-fy-fh);ctx.fillRect(0,fy,fx,fh);ctx.fillRect(fx+fw,fy,W-fx-fw,fh);ctx.globalAlpha=1;
+  ctx.strokeStyle=C.panel;ctx.lineWidth=2;ctx.strokeRect(fx,fy,fw,fh);
+  text(M.near?'近距離':'遠距離',fx+6,fy+16,C.panel,'left',11);
+  text('菸',12,H-26,C.panel,'left',11); rect(30,H-34,(W-60)/2-10,6,C.line,0.6); rect(30,H-34,((W-60)/2-10)*Math.max(0,M.burn/8),6,C.accent);
+  text('被發現',W/2+6,H-26,C.panel,'left',11); rect(W/2+50,H-34,W/2-62,6,C.line,0.6); rect(W/2+50,H-34,(W/2-62)*Math.min(1,M.risk/100),6,M.risk>70?C.bad:C.warn);
+  if(M.msgT>0) text(M.msg,W/2,fy-4,C.panel,'center',12);
+}
+
+function updPass(dt){
+  if(!M.done) return;
+  M.t+=dt; M.wx=(W+30)-((W+30)-W*0.05)*(M.t/M.dur);
+  if(M.t>0.5&&M.t<M.dur-0.6){ if(M.hold) M.pat+=dt*7; else M.air+=dt*11; }
+  if(M.t>=M.dur){var d=M.done,r={air:M.air,pat:M.pat};M.done=null;d(r)}
+}
+function drawPass(){
+  var g=gy();
+  rect(0,0,W,H,C.sky); rect(0,0,W,H*0.16,C.building);
+  skyline(4).forEach(function(b){rect(b.x,g-b.h*0.8,b.w,b.h*0.8,C.building)});
+  rect(0,g,W,H-g,C.ground);
+  rect(0,H*0.2,W,5,C.muted,0.6);
+  var bc=['#8a8498','#7d8aa3','#a38a85','#86a08f'];for(var i=0;i<4;i++) bike(W*(0.34+i*0.22),g+8,bc[i]);
+  var sx=W*0.2;
+  if(M.t>0.5&&M.t<M.dur-0.6){ for(var j=0;j<8;j++) circ(M.wx+10+j*26,g-30-Math.sin(M.t*3+j)*10,22,C.smoke,0.2); }
+  stroller(sx,g,M.hold===false&&M.t>0.5&&M.t<M.dur-0.6&&Math.floor(M.t*4)%2===0);
+  figure(M.wx,g,{look:LOOKS[2],dir:-1,arm:'mouth',step:Math.sin(M.t*8)*2}); cig(M.wx,g);
+  if(M.hold) text('憋氣中',sx,g-78,C.good,'center',12);
+}
+
+function drawClinic(){
+  var g=gy(), cx=W*0.62, sc=SC[Math.min(S.idx||0,SC.length-1)];
+  rect(0,0,W,H,C.building); rect(0,g,W,H-g,C.ground);
+  rect(W*0.06,H*0.12,W*0.2,H*0.34,C.sky); line(W*0.16,H*0.12,W*0.16,H*0.46,C.building,3);
+  line(cx,0,cx,H*0.16,C.muted,3); line(cx,H*0.16,cx+W*0.08,H*0.27,C.muted,3); rr(cx+W*0.04,H*0.26,W*0.12,10,5,'#f2d27a');
+  rect(cx-26,g-4,52,4,C.muted); line(cx-6,g-14,cx-6,g-4,C.muted,6);
+  rr(cx-32,g-28,64,14,6,'#7d8aa3');
+  ctx.fillStyle='#7d8aa3';ctx.beginPath();ctx.moveTo(cx+20,g-28);ctx.lineTo(cx+36,g-30);ctx.lineTo(cx+62,g-76);ctx.lineTo(cx+46,g-80);ctx.closePath();ctx.fill();
+  var P=LOOKS[3];
+  line(cx-24,g-38,cx+28,g-36,P.pants,9);
+  line(cx+30,g-38,cx+52,g-72,P.shirt,13);
+  circ(cx+57,g-83,10,P.skin);
+  ctx.fillStyle=P.hair;ctx.beginPath();ctx.arc(cx+57,g-83,10.5,Math.PI*0.95,Math.PI*1.85);ctx.closePath();ctx.fill();
+  circ(cx+52,g-83,1.2,'#2b2530');
+  var dx=W*0.28;
+  figure(dx,g,{look:DOC,dir:1,arm:'push'});
+  rr(dx+1,g-51,11,6,3,'#e9eef2');
+  text('病人',cx,g+18,C.muted,'center',11);
+}
+function updScale(dt){
+  if(!M.done) return;
+  M.t+=dt; M.flash=Math.max(0,M.flash-dt);
+  M.y=H*0.2+H*0.62*(0.5+0.5*Math.sin(M.t*1.8));
+  if(M.t>=M.dur){var d=M.done,n=0;M.bumps.forEach(function(b){if(b.done)n++});var r={done:n,total:M.bumps.length,miss:M.miss};M.done=null;d(r)}
+}
+function drawScale(){
+  rect(0,0,W,H,C.sky);
+  var cx=W*0.5;
+  function wAt(y){var t=Math.max(0,Math.min(1,(y-H*0.28)/(H*0.64)));return W*0.2*(1-t)+W*0.05*t}
+  ctx.fillStyle='#d99aa0';ctx.globalAlpha=0.6;
+  ctx.beginPath();ctx.moveTo(0,H*0.3);ctx.lineTo(cx-wAt(H*0.3)/2,H*0.3);ctx.lineTo(cx-wAt(H*0.92)/2,H*0.92);ctx.lineTo(cx-wAt(H*0.92)/2,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(W,H*0.3);ctx.lineTo(cx+wAt(H*0.3)/2,H*0.3);ctx.lineTo(cx+wAt(H*0.92)/2,H*0.92);ctx.lineTo(cx+wAt(H*0.92)/2,H);ctx.lineTo(W,H);ctx.closePath();ctx.fill();
+  ctx.globalAlpha=1;
+  rr(cx-W*0.12,H*0.06,W*0.24,H*0.26,12,'#f4f1f7');
+  ctx.fillStyle='#efe9db';ctx.beginPath();ctx.moveTo(cx-wAt(H*0.28)/2,H*0.28);ctx.lineTo(cx+wAt(H*0.28)/2,H*0.28);ctx.lineTo(cx+wAt(H*0.94)/2,H*0.94);ctx.lineTo(cx-wAt(H*0.94)/2,H*0.94);ctx.closePath();ctx.fill();
+  var lc=[0,0];
+  M.bumps.forEach(function(b){ if(b.done) return; lc[b.side]++; var x=b.side?cx+wAt(b.y)/2+3:cx-wAt(b.y)/2-3; circ(x,b.y,6,'#8a6a4a'); });
+  var sg=M.side?1:-1, tx=cx+sg*(wAt(M.y)/2+2);
+  line(tx+sg*70,M.y-36,tx,M.y,'#9a93a8',4); circ(tx,M.y,3,C.panel);
+  rect(12,10,W-24,6,C.line,0.9); rect(12,10,(W-24)*Math.min(1,M.t/M.dur),6,C.smoke);
+  text('左側剩 '+lc[0]+'　右側剩 '+lc[1],12,H-12,C.muted,'left',11);
+  text(M.side?'目前：右側':'目前：左側',W/2,H*0.05+14,C.fg,'center',11);
+  text('誤刮 '+M.miss+' 次',W-12,H-12,C.muted,'right',11);
+  if(M.flash>0) rect(0,0,W,H,M.ok?C.good:C.bad,M.flash*0.5);
+}
+function car(x,g,col){
+  circ(x-22,g-6,7,'#3b3646'); circ(x+22,g-6,7,'#3b3646');
+  rr(x-36,g-24,72,17,7,col); rr(x-20,g-38,40,18,7,col);
+  rr(x-15,g-34,14,10,3,C.sky); rr(x+2,g-34,14,10,3,C.sky);
+  rr(x-8,g-44,16,7,2,'#f7f5fa');
+}
+function wallSign(x,g){
+  circ(x,g-70,14,C.panel); ctx.strokeStyle=C.accent;ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,g-70,13,0,6.2832);ctx.stroke();
+  line(x-9,g-79,x+9,g-61,C.accent,3);
+  for(var k=0;k<10;k++) line(x-22+k*4.5,g-2-(k%3),x-19+k*4.5,g-3-(k%3),'#f4f1f7',2.2);
+}
+function ivPole(x,g){
+  line(x+20,g,x+20,g-86,'#8f8aa0',2.5); line(x+14,g-86,x+26,g-86,'#8f8aa0',2.5);
+  rr(x+15,g-100,10,16,3,'#d7e8f0'); line(x+20,g-84,x+8,g-40,'#d7e8f0',1.2);
+}
+function updRide(dt){
+  if(!M.done) return;
+  M.t+=dt; M.air+=(M.open?2:3.6)*M.f*dt; if(M.open) M.pat+=dt*3;
+  M.haze=Math.max(0,Math.min(1,M.haze+(M.open?-0.12:0.04)*dt));
+  if(M.t>=M.dur){var d=M.done,r={air:M.air,pat:M.pat};M.done=null;d(r)}
+}
+function drawRide(){
+  var t=M.t||0, hz=(M.haze==null)?(S.cab?0.8:0.3):M.haze, open=!!M.open;
+  rect(0,0,W,H,C.sky);
+  var a=skyline(6), off=(t*80)%(W+20);
+  for(var c=0;c<2;c++) a.forEach(function(b){rect(b.x-off+c*(W+20),H*0.7-b.h*0.9,b.w,b.h*0.9,C.building)});
+  rect(0,H*0.7,W,H*0.3,C.ground);
+  if(open) for(var k=0;k<5;k++){var wx=W-(((t*260)+k*90)%(W*0.9)); line(wx,H*0.2+k*14,wx-26,H*0.2+k*14,C.panel,2,0.6)}
+  rect(0,0,W,H*0.1,C.ground); rect(0,0,W*0.05,H,C.ground); rect(W*0.95,0,W*0.05,H,C.ground);
+  rr(W*0.3-22,H*0.82,44,H*0.2,10,PARENT.shirt); circ(W*0.3,H*0.74,16,PARENT.skin);
+  ctx.fillStyle=PARENT.hair;ctx.beginPath();ctx.arc(W*0.3,H*0.74,17,Math.PI*1.02,Math.PI*1.98);ctx.closePath();ctx.fill();
+  rr(W*0.58-16,H*0.92,32,H*0.1,8,'#8fa8c4'); circ(W*0.58,H*0.87,12,'#e8b896');
+  ctx.fillStyle='#f2d27a';ctx.beginPath();ctx.arc(W*0.58,H*0.87,12.5,Math.PI*1.05,Math.PI*1.95);ctx.closePath();ctx.fill();
+  rect(0,0,W,H,C.smoke,hz*0.45);
+  text('殘留味道',16,H*0.065,C.fg,'left',11); rect(78,H*0.035,W-110,6,C.line,0.8); rect(78,H*0.035,(W-110)*hz,6,C.accent);
+  text(open?'窗戶：開':'窗戶：關',W-16,H*0.065,C.fg,'right',11);
+}
+function loop(ts){
+  var dt=Math.min(0.05,(ts-last)/1000||0); last=ts; frame++;
+  if(frame%30===1) readColors();
+  if(!M) M={};
+  if(mode==='dodge') updDodge(dt); else if(mode==='photo') updPhoto(dt); else if(mode==='pass') updPass(dt); else if(mode==='ride') updRide(dt); else if(mode==='scale') updScale(dt); else if(mode==='find') updFind(dt);
+  updParts(dt);
+  ctx.clearRect(0,0,W,H);
+  if(mode==='dodge') drawDodge();
+  else if(mode==='pass'){ drawPass(); drawParts(); }
+  else if(mode==='ride') drawRide();
+  else if(mode==='scale') drawScale();
+  else if(mode==='find') drawFind();
+  else if(mode==='cover') drawCover();
+  else{
+    var sc=SC[Math.min(S.idx||0,SC.length-1)];
+    if(sc.kind==='ride') drawRide();
+    else if(sc.kind==='clinic'){ drawClinic(); drawParts(); }
+    else{
+      drawWorld(sc.kind,sc);
+      stroller(W*0.2,gy(),false);
+      if(sc.elev&&sc.kind==='find') rect(smokerX()-30,gy()-sc.elev+4,60,6,C.muted);
+      if(!(sc.kind==='find'&&!sc.revealed)) smoker(smokerX(),gy()-(sc.elev||0),sc.who,sc.look||sc.seed,sc.kind==='crossing');
+      if(sc.kind==='stairs') ivPole(smokerX(),gy());
+      drawParts();
+    }
+    if(mode==='photo') drawPhoto();
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ---------- 開場 ---------- */
+(function(){ var b=$('#snd'); if(!b) return; b.textContent=AU.on?'聲音：開':'聲音：關'; b.addEventListener('click',function(){ auInit(); auSet(!AU.on); }); })();
+menu();
+requestAnimationFrame(loop);
+})();
+</script>
