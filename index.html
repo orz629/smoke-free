@@ -1085,8 +1085,8 @@ function drawWorld(kind,sc){
     rect(W*0.3-4,H*0.12,4,g-H*0.12,'#000',0.1); line(W*0.04,H*0.12,W*0.04,g,'#6b6478',2.5,0.7); line(W*0.04,H*0.35,W*0.14,H*0.35,'#6b6478',2,0.7);
     for(var wr=0;wr<3;wr++) rect(W*0.14,H*0.2+wr*34,W*0.09,16,dk?(wr%2?'#f2d27a':'#2f2a4a'):mix(C.sky,'#fff',0.4),0.85);
     rect(W*0.3,g-3,W,3,C.muted,0.4);
-    if(sc&&sc.revealed&&sc.elev) facade(smokerX(),g,sc.elev,dk);
     lamp(W*0.64,g,H*0.5,dk);
+    if(sc&&sc.revealed&&sc.elev) facade(smokerX(),g,sc.elev,dk);
   } else if(kind==='taxi'){
     ctx.fillStyle=lg(0,H*0.2,0,g,[[0,mix(C.building,'#fff',0.2)],[1,C.building]]); ctx.fillRect(0,H*0.2,W*0.44,g-H*0.2);
     rect(0,H*0.2,W*0.44,14,C.muted,0.6); text('門診大樓',W*0.22,H*0.2+11,C.panel,'center',11);
@@ -1103,6 +1103,7 @@ function tip(){
   if(mode==='pass') return {x:M.wx-17,y:gy()-48};
   var sc=SC[Math.min(S.idx||0,SC.length-1)];
   if(sc.kind==='clinic') return {x:W*0.62+42,y:gy()-86};
+  if(sc.kind==='find'&&sc.elev&&sc.revealed) return {x:smokerX()-17,y:winGeom(sc.elev).fy-47};
   return {x:smokerX()-17,y:gy()-48-(sc.kind==='crossing'?7:0)-(sc.elev||0)};
 }
 function updParts(dt){
@@ -1124,6 +1125,7 @@ function hospitalFacade(base,topY){
   if(!compact){ rect(W*0.84,top+22,7,22,'#c4503a'); rect(W*0.84-7.5,top+29.5,22,7,'#c4503a'); }
   rect(0,base-4,W,4,'#000',0.08);
 }
+function winGeom(elev){ var g=gy(), sy=g-elev, wh=Math.min(46,sy-6), wy=sy-wh-3; return {sy:sy,wh:wh,wy:wy,fy:wy+68}; }
 function facade(x,g,elev,dk){
   var w=64, sy=g-elev;
   ctx.fillStyle=lg(x-w/2,0,x+w/2,0,[[0,mix(C.building,'#ffffff',0.12)],[1,mix(C.building,'#2a2540',0.14)]]); ctx.fillRect(x-w/2,0,w,g);
@@ -1216,7 +1218,7 @@ function drawFind(){
     ctx.globalAlpha=ck?0.45:1;
     if(s.k==='bin'){ rr(s.x-12,g-26,24,26,3,C.muted); rect(s.x-14,g-30,28,5,C.muted); }
     else if(s.k==='car'){ car(s.x,g,'#8a9db5'); }
-    else if(s.k==='win'){ rect(s.x-26,g-(s.elev||100),52,5,'#8a8498'); }
+    else if(s.k==='win'){ }
     else if(s.k==='bush'){ circ(s.x-8,g-12,14,C.good,0.55); circ(s.x+8,g-14,16,C.good,0.55); }
     else if(s.k==='corner'){ rect(s.x-10,g-90,W*0.07,90,C.building); }
     ctx.globalAlpha=1;
@@ -1472,8 +1474,10 @@ function loop(ts){
     else{
       drawWorld(sc.kind,sc);
       stroller(W*0.2,gy(),false);
-      if(sc.elev&&sc.kind==='find') rect(smokerX()-30,gy()-sc.elev+4,60,6,C.muted);
-      if(!(sc.kind==='find'&&!sc.revealed)) smoker(smokerX(),gy()-(sc.elev||0),sc.who,sc.look||sc.seed,sc.kind==='crossing');
+      if(sc.kind==='find'&&sc.elev&&sc.revealed){
+        var wg=winGeom(sc.elev); ctx.save(); ctx.beginPath(); ctx.rect(smokerX()-20,wg.wy,40,wg.wh); ctx.clip();
+        smoker(smokerX(),wg.fy,'',sc.look||sc.seed,false); ctx.restore();
+      } else if(!(sc.kind==='find'&&!sc.revealed)) smoker(smokerX(),gy()-(sc.elev||0),sc.who,sc.look||sc.seed,sc.kind==='crossing');
       if(sc.kind==='stairs') ivPole(smokerX(),gy());
       if(sc.kind==='balcony') balconyRail(sc);
       drawParts();
