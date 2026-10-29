@@ -1034,13 +1034,13 @@ function drawClinic(){
   var g=gy(), cx=W*0.62, sc=SC[Math.min(S.idx||0,SC.length-1)];
   rect(0,0,W,H,C.building); rect(0,g,W,H-g,C.ground);
   rect(W*0.06,H*0.12,W*0.2,H*0.34,C.sky); line(W*0.16,H*0.12,W*0.16,H*0.46,C.building,3);
-  line(cx,0,cx,H*0.16,C.muted,3); line(cx,H*0.16,cx+W*0.08,H*0.27,C.muted,3); rr(cx+W*0.04,H*0.26,W*0.12,10,5,'#f2d27a');
+  var lx=cx-W*0.12; line(lx,0,lx,H*0.16,C.muted,3); line(lx,H*0.16,lx+W*0.08,H*0.27,C.muted,3); rr(lx+W*0.04,H*0.26,W*0.12,10,5,'#f2d27a');
   rect(cx-26,g-4,52,4,C.muted); line(cx-6,g-14,cx-6,g-4,C.muted,6);
   rr(cx-32,g-28,64,14,6,'#7d8aa3');
   ctx.fillStyle='#7d8aa3';ctx.beginPath();ctx.moveTo(cx+20,g-28);ctx.lineTo(cx+36,g-30);ctx.lineTo(cx+62,g-76);ctx.lineTo(cx+46,g-80);ctx.closePath();ctx.fill();
   var P={shirt:'#d9a05b',pants:'#4a4358',hair:LOOKS[3].hair,skin:LOOKS[3].skin};
-  line(cx-24,g-44,cx+22,g-45,P.pants,9);
-  line(cx+20,g-47,cx+42,g-80,P.shirt,13);
+  line(cx-24,g-33,cx+16,g-34,P.pants,9);
+  line(cx+16,g-37,cx+42,g-80,P.shirt,13);
   circ(cx+47,g-91,10,P.skin);
   ctx.fillStyle=P.hair;ctx.beginPath();ctx.arc(cx+47,g-91,10.5,Math.PI*0.95,Math.PI*1.85);ctx.closePath();ctx.fill();
   circ(cx+42,g-91,1.2,'#2b2530');
