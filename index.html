@@ -15,18 +15,7 @@
   --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
   --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#16131c; --sky:#1f1b29; --panel:#211d2a; --fg:#ece8f3; --muted:#a199b0; --line:#363040;
-    --smoke:#a493c4; --accent:#e2704f; --good:#5fb690; --warn:#d7a24a; --bad:#e0655f;
-    --ground:#2b2634; --building:#262131; color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#16131c; --sky:#1f1b29; --panel:#211d2a; --fg:#ece8f3; --muted:#a199b0; --line:#363040;
-  --smoke:#a493c4; --accent:#e2704f; --good:#5fb690; --warn:#d7a24a; --bad:#e0655f;
-  --ground:#2b2634; --building:#262131; color-scheme:dark;
-}
+:root{color-scheme:light}
 body{
   background:var(--bg); color:var(--fg); font:15px/1.6 var(--sans);
   padding-block:12px 28px;
@@ -167,11 +156,21 @@ function setChoices(arr){
     b.onclick=c.f; choices.appendChild(b);
   });
 }
+function revive(){
+  S.air=Math.max(S.air,60); S.pat=Math.max(S.pat,60); S.time=Math.max(S.time,60); S.smell=Math.min(S.smell,50);
+  S.st.revived=(S.st.revived||0)+1; hud();
+}
+function bailChoices(endFn,goFn){
+  var more=S.idx<SC.length-1;
+  var a=[{t:'查看今日結算',s:more?'結束這次行程':'',one:!more,f:endFn}];
+  if(more) a.push({t:'繼續往下體驗',s:'補回部分狀態，讓您可以走完整一輪',f:function(){ revive(); goFn(); }});
+  return a;
+}
 function afterAction(msg,gov){
   mode='scene';M={};
   var r=checkEnd();
   say(head()+'<p>'+msg+'</p>'+(gov?'<p class="gov">'+gov+'</p>':''));
-  if(r) setChoices([{t:'查看今日結算',one:true,f:function(){end(r)}}]);
+  if(r) setChoices(bailChoices(function(){end(r)},next));
   else setChoices([{t:S.idx<SC.length-1?'繼續前進':'結束今天的行程',one:true,f:next}]);
 }
 
@@ -312,7 +311,7 @@ function detour(){
     if(Math.random()<0.10){
       apply({air:-10}); S.over=true;
       say(head()+'<p>為了躲煙，您把娃娃車推下了人行道。</p><p>急煞聲與喇叭聲同時響起。</p><p class="gov">今日行程提早結束。</p>');
-      setChoices([{t:'查看今日結算',one:true,f:function(){end('road')}}]); mode='scene'; M={};
+      setChoices(bailChoices(function(){end('road')},next)); mode='scene'; M={};
     } else {
       apply({air:-4,pat:-10});
       afterAction('為了躲煙，您把娃娃車推下了人行道。一台車按著喇叭呼嘯而過，擦過娃娃車旁，寶寶被嚇哭。','您成功避開了二手菸。');
@@ -377,7 +376,7 @@ function acceptGame(){
 /* ---------- 路線三：拍照檢舉 ---------- */
 function photo(){
   S.st.photos++; apply({time:-3});
-  say(head()+'<p>您悄悄舉起手機。</p><p class="gov">框住人、菸'+(SC[S.idx].sign?'、禁菸標誌':'')+'，按下快門。靠得越近越好拍，也越容易被發現。菸燒完就沒有證據了。</p>');
+  say(head()+'<p>您悄悄舉起手機。</p><p class="gov">按下大大的「拍照」鈕（或直接點畫面），就會拍下取景框裡的人、菸'+(SC[S.idx].sign?'、禁菸標誌':'')+'。靠近拍比較容易拍到，也比較容易被發現。菸燒完就沒有證據了。</p>');
   startMode('photo',function(res){
     if(res==='ok'){ S.st.caught+=0; return report(); }
     if(res==='retreat'){ apply({pat:-4}); return afterAction('您默默收起手機，離開了現場。'); }
@@ -603,7 +602,7 @@ function startPass(after){
     mode='scene';M={};
     var r=checkEnd();
     say('<div class="who">路上</div><p>您與菸霧完成了近距離交會，被動吸入 '+p+' 口。連選擇的機會都沒有。</p><p class="gov">感謝您的配合。</p>');
-    setChoices([{t:r?'查看今日結算':'繼續走',one:true,f:r?function(){end(r)}:after}]);
+    if(r) setChoices(bailChoices(function(){end(r)},after)); else setChoices([{t:'繼續走',one:true,f:after}]);
   });
   holdUI();
 }
@@ -641,7 +640,7 @@ function end(reason){
    '<dt>檢舉／實際裁處</dt><dd>'+st.reports+' 次／0 次</dd>'+
    '<dt>繞路／因此走下人行道</dt><dd>'+st.detour+' 次／'+st.road+' 次</dd>'+
    '<dt>加速通過／吸到煙霧團</dt><dd>'+st.rush+' 次／'+st.hits+' 團</dd>'+
-   (st.guard?'<dt>找警衛反映</dt><dd>'+st.guard+' 次</dd>':'')+(st.wind?'<dt>閃躲時風向改變</dt><dd>'+st.wind+' 次（抽菸的人完全沒有移動）</dd>':'')+(st.lost?'<dt>找不到煙味源頭</dt><dd>'+st.lost+' 次</dd>':'')+(S.cab?'<dt>搭上有菸味的車</dt><dd>1 次</dd>':'')+
+   (st.revived?'<dt>提前結束後選擇繼續體驗</dt><dd>'+st.revived+' 次</dd>':'')+(st.guard?'<dt>找警衛反映</dt><dd>'+st.guard+' 次</dd>':'')+(st.wind?'<dt>閃躲時風向改變</dt><dd>'+st.wind+' 次（抽菸的人完全沒有移動）</dd>':'')+(st.lost?'<dt>找不到煙味源頭</dt><dd>'+st.lost+' 次</dd>':'')+(S.cab?'<dt>搭上有菸味的車</dt><dd>1 次</dd>':'')+
    '<dt>吸入口數（其中被動）</dt><dd>'+S.puffs+' 口（'+S.passive+' 口）</dd>'+
    '</dl>'+
    (S.ach?'<div class="ach">成就解鎖：今天有一個人聽進去。</div>':'')+
@@ -910,6 +909,7 @@ function drawFind(){
 function laneY(i){return H*(0.52+i*0.15)}
 function setLane(d){ if(mode==='dodge') M.lane=Math.max(0,Math.min(2,M.lane+d)); }
 cv.addEventListener('pointerdown',function(e){
+  if(mode==='photo'){e.preventDefault();shutter();return}
   if(mode==='find'){e.preventDefault();var fr=cv.getBoundingClientRect();findTap(e.clientX-fr.left,e.clientY-fr.top);return}
   if(mode==='scale'){e.preventDefault();scaleStroke();return}
   if(mode!=='dodge') return; e.preventDefault();
@@ -946,7 +946,7 @@ function drawDodge(){
   if(M.flash>0) rect(0,0,W,H,C.bad,M.flash*0.5);
 }
 
-function frameW(){return W*(M.near?0.36:0.24)*(M.dark?0.85:1)}
+function frameW(){return W*(M.near?0.38:0.3)*(M.dark?0.9:1)}
 function photoLR(){
   var sx=smokerX(),L=sx-26,R=sx+14;
   if(SC[S.idx].sign) L=Math.min(L,signX()-14);
@@ -956,7 +956,7 @@ function updPhoto(dt){
   if(!M.done) return;
   M.t+=dt; M.burn-=dt; M.msgT=Math.max(0,M.msgT-dt);
   M.risk+=dt*(M.near?24:10);
-  M.fx=W*0.5+Math.sin(M.t*1.5)*W*0.36;
+  M.fx=smokerX()-6+Math.sin(M.t*1.5)*W*(M.near?0.025:0.035);
   if(M.risk>=100) finishPhoto('caught'); else if(M.burn<=0) finishPhoto('burnt');
 }
 function finishPhoto(res){ if(!M.done) return; var d=M.done; M.done=null; d(res); }
@@ -970,11 +970,13 @@ function setNear(v){M.near=v;syncPhoto()}
 function syncPhoto(){choices.querySelectorAll('[data-k]').forEach(function(b){b.setAttribute('aria-pressed',String((b.dataset.k==='near')===M.near))})}
 function photoUI(){
   choices.innerHTML='';
-  function mk(t,s,f,k){var b=document.createElement('button');b.className='choice';b.innerHTML='<b>'+t+'</b><span>'+s+'</span>';b.onclick=f;if(k)b.dataset.k=k;choices.appendChild(b)}
-  mk('靠近拍','好拍，但容易被發現',function(){setNear(true)},'near');
-  mk('保持距離','安全，但取景窗變小',function(){setNear(false)},'far');
-  mk('按下快門','框住人、菸'+(SC[S.idx].sign?'、標誌':''),shutter);
-  mk('撤退','放棄這次蒐證',function(){finishPhoto('retreat')});
+  var sh=document.createElement('button'); sh.type='button'; sh.className='choice one big'; sh.style.cssText='padding:26px 14px;font-size:20px;border-color:var(--accent)';
+  sh.innerHTML='<b style="font-size:22px">拍照</b><span>按下去就拍下取景框裡的畫面</span>';
+  sh.addEventListener('pointerdown',function(e){e.preventDefault();shutter()}); choices.appendChild(sh);
+  function mk(t,s,f,k){var b=document.createElement('button');b.type='button';b.className='choice';b.innerHTML='<b>'+t+'</b><span>'+s+'</span>';b.onclick=f;if(k)b.dataset.k=k;choices.appendChild(b)}
+  mk('靠近拍','容易拍到，也容易被發現',function(){setNear(true)},'near');
+  mk('遠距離拍','比較安全，但取景框變小',function(){setNear(false)},'far');
+  var rt=document.createElement('button'); rt.type='button'; rt.className='choice one'; rt.innerHTML='<b>撤退</b><span>放棄這次蒐證</span>'; rt.onclick=function(){finishPhoto('retreat')}; choices.appendChild(rt);
   syncPhoto();
 }
 function drawPhoto(){
