@@ -575,16 +575,16 @@ function clinicSay(extra){
 }
 function clinicChoices(){
   var a=[];
-  if(!S.probed) a.push({t:'探測檢查',s:'先看牙周狀況（時間 -5）',f:probe});
+  if(!S.probed) a.push({t:'牙周檢查',s:'用探針量牙齦的狀況（時間 -5）',f:probe});
   a.push({t:'衛教戒菸',s:'結果由骰子決定',f:educate});
-  a.push({t:'牙根整平',s:'刮刀小遊戲，清除牙結石',f:scaleStart});
+  a.push({t:'牙根整平',s:'深層清潔：刮除牙根上的牙結石（小遊戲）',f:scaleStart});
   a.push({t:'轉介戒菸服務',s:'填轉介單',f:referral});
   if(S.probed) a[a.length-1].one=true;
   setChoices(a);
 }
 function probe(){
   var sc=SC[S.idx]; S.probed=true; apply({time:-5});
-  clinicSay('<p>您一格一格量過去。病人說：「你看，沒流血吧。」全口探測出血 BOP：'+sc.data.bop+'%，最深探測附連水平：'+sc.data.cal+' mm（遊戲示意數字）。</p><p class="gov">吸菸會讓牙齦血管收縮，出血徵象常被壓低，牙齦看起來不太出血，但附連喪失和骨頭喪失仍然嚴重。</p>');
+  clinicSay('<p>您一格一格量過去。病人說：「你看，沒流血吧。」您用牙周探針把每顆牙量過一圈：會流血的地方只有 '+sc.data.bop+'%，但最嚴重的地方，牙齒周圍的支撐已經流失 '+sc.data.cal+' 公釐（遊戲示意數字）。</p><p class="gov">吸菸會讓牙齦的血管收縮，所以牙齦看起來不太流血、好像沒事。但支撐牙齒的骨頭和組織，還是一直在流失。</p>');
   clinicChoices();
 }
 function educate(){
@@ -605,7 +605,7 @@ function referral(){
 }
 function scaleStart(){
   apply({time:-20}); smell(8);
-  say(head()+'<p>您拿起刮刀，開始牙根整平。</p><p class="gov">刮刀掃過牙根，碰到牙結石的瞬間按「刮」。牙結石在另一側時，要先按「換邊」。刮到沒有結石的地方，會傷到牙齦。</p>');
+  say(head()+'<p>您拿起刮刀，開始牙根整平（深層清潔，把藏在牙齦下面的牙結石刮乾淨）。</p><p class="gov">刮刀掃過牙根，碰到牙結石的瞬間按「刮」。牙結石在另一側時，要先按「換邊」。刮到沒有結石的地方，會傷到牙齦。</p>');
   startMode('scale',function(r){
     var q=r.done/r.total; S.scaleN++; S.scaleQ+=q;
     apply({pat:Math.round(q*8)-Math.min(r.miss*3,12)});
@@ -646,9 +646,9 @@ function end3(reason){
    '<h2>'+T[0]+'</h2><p class="sub">'+T[1]+'</p>'+
    (reason==='done'?
     '<dl class="stats">'+
-    '<dt>全口探測出血 BOP</dt><dd>'+d0.bop+'% → '+d1.bop+'%</dd>'+
-    '<dt>最深探測附連水平</dt><dd>'+d0.cal+' mm → '+d1.cal+' mm</dd>'+
-    '</dl><p class="sub">出血看起來少了，附連喪失卻沒有好轉。辛苦做的牙根整平，被一支又一支菸抵消了。數字為遊戲示意。</p>':'')+
+    '<dt>牙齦會流血的比例</dt><dd>'+d0.bop+'% → '+d1.bop+'%</dd>'+
+    '<dt>支撐流失最嚴重的地方</dt><dd>'+d0.cal+' mm → '+d1.cal+' mm</dd>'+
+    '</dl><p class="sub">牙齦看起來不太流血了，但支撐牙齒的組織流失沒有好轉。辛苦做的牙根整平，被一支又一支菸抵消了。數字為遊戲示意。</p>':'')+
    '<dl class="stats">'+
    '<dt>戒菸承諾／實際戒菸</dt><dd>'+S.promise+' 次／0 次</dd>'+
    '<dt>衛教嘗試／成功轉介</dt><dd>'+S.edu+' 次／'+S.refer+' 次</dd>'+
@@ -1536,8 +1536,8 @@ function drawScale(){
   M.bumps.forEach(function(b){ if(b.done) return; lc[b.side]++; var x=rootEdge(b.side,b.y)+(b.side?3:-3); ctx.fillStyle='#7a5a3c'; ctx.beginPath(); ctx.ellipse(x,b.y,8,6,0,0,6.2832); ctx.fill(); circ(x+(b.side?2:-2),b.y-1,3,'#9a7650'); });
   var sg=M.side?1:-1, tx=rootEdge(M.side,M.y)+sg*2;
   line(tx+sg*70,M.y-36,tx,M.y,'#9a93a8',4); circ(tx,M.y,3,C.panel);
-  text('骨吸收',M.side?W-8:8,H*0.56,'#6a5338',M.side?'right':'left',11);
-  text('根岔病變',cx,H*0.66,'#e8dfe3','center',11);
+  text('骨頭流失',M.side?W-8:8,H*0.56,'#6a5338',M.side?'right':'left',11);
+  text('骨頭被蝕空',cx,H*0.66,'#e8dfe3','center',11);
   rect(12,10,W-24,6,C.line,0.9); rect(12,10,(W-24)*Math.min(1,M.t/M.dur),6,C.smoke);
   text('左側剩 '+lc[0]+'　右側剩 '+lc[1],12,H-12,C.muted,'left',11);
   text(M.side?'目前：右側':'目前：左側',W/2,H*0.05+14,C.fg,'center',11);
