@@ -711,6 +711,7 @@ function shareGrade(g,score,L,txt){
   var url=c.toDataURL('image/png');
   box.innerHTML='<img src="'+url+'" alt="成績圖" style="width:100%;border-radius:10px;border:1px solid var(--line)"><p class="sub" style="margin:6px 0 0">長按圖片可以儲存或分享。</p>';
   box.hidden=false;
+  try{ box.scrollIntoView({behavior:'smooth',block:'start'}); }catch(x){}
   try{
     if(c.toBlob&&navigator.share&&window.File){
       c.toBlob(function(b){
@@ -750,9 +751,10 @@ function summary(reason){
    '<div class="real"><p>現實：國民健康署指出，國內平均每年近 3,000 人死於二手菸害。</p>'+
    '<p>在公告禁菸的場所遇到有人吸菸，可向當地衛生局檢舉，並附上照片或影片；蒐證請保持距離、不要正面衝突。</p>'+
    '<p>吸菸會讓牙周治療後的癒合較差，也較容易復發。國健署免費戒菸專線 0800-636363（戒菸撥 63）。</p></div>'+
+   '<button class="choice" id="sh2"><b>分享我的成績</b><span>產生成績圖並分享</span></button>'+
    '<button class="choice one big" id="again"><b>回到選單</b></button>';
   $('#again').onclick=menu;
-  $('#sh').onclick=function(){ shareGrade(g,score,L,txt); };
+  $('#sh').onclick=$('#sh2').onclick=function(){ shareGrade(g,score,L,txt); };
   $('#cp').onclick=function(){
     var b=$('#cp'), ok=function(){ b.querySelector('b').textContent='已複製'; };
     try{ navigator.clipboard.writeText(txt).then(ok,function(){ b.querySelector('b').textContent=txt; }); }catch(x){ b.querySelector('b').textContent=txt; }
