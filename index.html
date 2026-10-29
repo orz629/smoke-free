@@ -342,7 +342,7 @@ function laundryScene(sc){
 function next(){
   var i=S.idx+1;
   if(i>=SC.length){ end('done'); return; }
-  if(SC[i].ch!==SC[S.idx].ch){ if(SC===ALL) snapChap(SC[S.idx].ch); chapterBreak(i); return; }
+  if(SC[i].ch!==SC[S.idx].ch){ snapChap(SC[S.idx].ch); chapterBreak(i); return; }
   var fi=SC.length>=5?3:1;
   var force=(i===fi&&S.passEv===0);
   if((SC[i].ch<3||SC[i].ch===4)&&SC[i].kind!=='ride'&&SC[i].kind!=='lift'&&SC[i].kind!=='laundry'&&(force||(i>=1&&Math.random()<0.4))){ S.passEv++; S.passSc=SC[i]; startPass(function(){enterScene(i)}); }
@@ -759,14 +759,14 @@ function summary(reason){
   L.forEach(function(r){ tot.puffs+=r.puffs; tot.passive+=r.passive; tot.photos+=r.d.photos; tot.caught+=r.d.caught; tot.reports+=r.d.reports; tot.revived+=(r.d.revived||0); tot.ok+=r.d.ok; tot.tries+=r.d.tries; sum+=r.score; });
   var score=Math.max(0,Math.min(100,Math.round(sum/L.length-tot.caught*3-tot.revived*8)));
   var g=gradeOf(score), full=(reason==='done');
-  var T=full?['今日完整行程結束','從逛街、回診、上班到回家，您走完了一整天。']:
+  var T=full?(SC===ALL?['今日完整行程結束','從逛街、回診、上班到回家，您走完了一整天。']:SC[SC.length-1].ch===4?['今晚的行程結束','您帶著孩子回到了家。門一關，味道還在衣服上。']:['今日行程結束','您推著娃娃車走完了這一趟。']):
     {road:['行程提早結束','為了躲煙，您走下了人行道。'],air:['行程提早結束','寶寶咳得停不下來，只好打道回府。'],pat:['行程提早結束','耐心用完了，今天只能到這裡。'],time:['行程提早結束','時間用完了。'],smell:['行程提早結束','味道太濃了，今天只能到這裡。']}[reason]||['行程結束',''];
   var cards=L.map(function(r){ var t=chapLine(r); return '<div class="cc"><div class="h"><b>'+CHN[r.ch]+'</b><span>'+r.score+' 分</span></div><div class="l">'+t[0]+'</div><div class="r">'+t[1]+'</div></div>'; }).join('');
   var txt='無菸城市｜今日文明指數 '+g[0]+'（'+score+'）：'+g[1]+'。'+g[2]+' https://orz629.github.io/smoke-free';
   $('#play').hidden=true; var e=$('#end'); e.hidden=false;
   e.innerHTML=
    '<h2>'+T[0]+'</h2><p class="sub">'+T[1]+'</p>'+
-   '<div class="grade"><div class="g">'+g[0]+'</div><div class="n"><b>今日文明指數 '+score+'：'+g[1]+'</b>'+g[2]+'<br><small>本指數為遊戲虛構。'+(full?'':'僅計算已經玩過的章節。')+'</small></div></div>'+
+   '<div class="grade"><div class="g">'+g[0]+'</div><div class="n"><b>今日文明指數 '+score+'：'+g[1]+'</b>'+g[2]+'<br><small>本指數為遊戲虛構。'+(full&&SC===ALL?'':(SC===ALL?'僅計算已經玩過的章節。':'僅計算這一章。'))+'</small></div></div>'+
    '<div id="shareimg" hidden></div>'+
    '<button class="choice" id="sh"><b>產生分享圖</b><span>存成圖片，貼給朋友看看</span></button>'+
    '<button class="choice sm" id="cp"><b>只複製文字</b></button>'+
@@ -794,8 +794,8 @@ function summary(reason){
 /* ---------- 結算 ---------- */
 function end(reason){
   sfx('end');
-  if(SC===ALL){ if(S.snapped!==SC[S.idx].ch) snapChap(SC[S.idx].ch); return summary(reason); }
-  if(S.ch3) return end3(reason);
+  if(S.ch3&&SC!==ALL) return end3(reason);
+  if(S.snapped!==SC[S.idx].ch) snapChap(SC[S.idx].ch); return summary(reason);
   mode='scene';M={};
   var T={
     done:SC[SC.length-1].ch===4?['今晚的行程結束','您帶著孩子回到了家。門一關，味道還在衣服上。']:['今日行程結束','您推著娃娃車走完了這一趟。'],
