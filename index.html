@@ -376,7 +376,7 @@ function acceptGame(){
 /* ---------- 路線三：拍照檢舉 ---------- */
 function photo(){
   S.st.photos++; apply({time:-3});
-  say(head()+'<p>您悄悄舉起手機。</p><p class="gov">按下大大的「拍照」鈕（或直接點畫面），就會拍下取景框裡的人、菸'+(SC[S.idx].sign?'、禁菸標誌':'')+'。靠近拍比較容易拍到，也比較容易被發現。菸燒完就沒有證據了。</p>');
+  say(head()+'<p>您悄悄舉起手機。</p><p class="gov">取景框會左右快速移動，抓準時機按下大大的「拍照」鈕（或直接點畫面），就會拍下取景框裡的人、菸'+(SC[S.idx].sign?'、禁菸標誌':'')+'。靠近拍比較容易拍到，也比較容易被發現。菸燒完就沒有證據了。</p>');
   startMode('photo',function(res){
     if(res==='ok'){ S.st.caught+=0; return report(); }
     if(res==='retreat'){ apply({pat:-4}); return afterAction('您默默收起手機，離開了現場。'); }
@@ -946,7 +946,7 @@ function drawDodge(){
   if(M.flash>0) rect(0,0,W,H,C.bad,M.flash*0.5);
 }
 
-function frameW(){return W*(M.near?0.38:0.3)*(M.dark?0.9:1)}
+function frameW(){return W*(M.near?0.34:0.26)*(M.dark?0.9:1)}
 function photoLR(){
   var sx=smokerX(),L=sx-26,R=sx+14;
   if(SC[S.idx].sign) L=Math.min(L,signX()-14);
@@ -956,7 +956,7 @@ function updPhoto(dt){
   if(!M.done) return;
   M.t+=dt; M.burn-=dt; M.msgT=Math.max(0,M.msgT-dt);
   M.risk+=dt*(M.near?24:10);
-  M.fx=smokerX()-6+Math.sin(M.t*1.5)*W*(M.near?0.025:0.035);
+  M.fx=smokerX()-6+Math.sin(M.t*(M.near?3.2:3.8))*W*(M.near?0.2:0.19);
   if(M.risk>=100) finishPhoto('caught'); else if(M.burn<=0) finishPhoto('burnt');
 }
 function finishPhoto(res){ if(!M.done) return; var d=M.done; M.done=null; d(res); }
