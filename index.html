@@ -669,12 +669,57 @@ function chapLine(r){
   var rem={1:'街上沒有人需要為這些煙負責。',2:'在醫院，二手菸也沒有放過孩子。',4:'連回到家門口，煙都先到了。'}[r.ch];
   return [a.join('；'),rem];
 }
-function gradeOf(sc){
-  if(sc>=85) return ['A','模範公民','您活在公民課本裡的那座城市。'];
-  if(sc>=70) return ['B','盡力了','您很努力，這座城市沒有。'];
-  if(sc>=55) return ['C','勉強過關','您撐過來了，肺不一定。'];
-  if(sc>=40) return ['D','辛苦了','您和孩子都盡力了，可惜呼吸不是自願的。'];
-  return ['E','今日不宜出門','今天，這座城市沒有為您的呼吸負責。'];
+var GR=[['A','模範公民','您活在公民課本裡的那座城市。'],['B','盡力了','您很努力，這座城市沒有。'],['C','勉強過關','您撐過來了，肺不一定。'],['D','辛苦了','您和孩子都盡力了，可惜呼吸不是自願的。'],['E','今日不宜出門','今天，這座城市沒有為您的呼吸負責。']];
+function gradeOf(sc){ return sc>=85?GR[0]:sc>=70?GR[1]:sc>=55?GR[2]:sc>=40?GR[3]:GR[4]; }
+function wrapTxt(c,t,x,y,w,lh){
+  var line='',i,ch;
+  for(i=0;i<t.length;i++){ ch=t[i]; if(c.measureText(line+ch).width>w&&line){ c.fillText(line,x,y); y+=lh; line=ch; } else line+=ch; }
+  if(line){ c.fillText(line,x,y); y+=lh; } return y;
+}
+function shareCanvas(g,score,L){
+  var c=document.createElement('canvas'); c.width=1080; c.height=1350; var x=c.getContext('2d');
+  var SER='"Noto Serif TC","Songti TC","PMingLiU",serif', SAN='"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
+  x.fillStyle='#ebe8f0'; x.fillRect(0,0,1080,1350);
+  x.fillStyle='#f8f6fb'; x.strokeStyle='#d2cbdc'; x.lineWidth=3;
+  x.fillRect(50,50,980,1250); x.strokeRect(50,50,980,1250);
+  x.textAlign='center'; x.textBaseline='alphabetic';
+  x.fillStyle='#26222f'; x.font='600 68px '+SER; x.fillText('無菸城市',540,150);
+  x.fillStyle='#675f77'; x.font='34px '+SER; x.fillText('推著娃娃車出門的一天',540,205);
+  x.fillStyle='#d2cbdc'; x.fillRect(120,245,840,3);
+  x.fillStyle='#675f77'; x.font='38px '+SAN; x.fillText('今日文明指數',540,315);
+  x.fillStyle='#c4503a'; x.font='600 400px '+SER; x.fillText(g[0],540,665);
+  x.fillStyle='#26222f'; x.font='600 62px '+SER; x.fillText(score+' 分　'+g[1],540,750);
+  x.fillStyle='#675f77'; x.font='38px '+SER; wrapTxt(x,g[2],540,820,780,56);
+  var cs=L.map(function(r){return ['一','二','三','四'][r.ch-1]+' '+r.score}).join('　');
+  x.font='30px '+SAN; x.fillText('章節　'+cs,540,935);
+  /* A-E row */
+  var bw=152,gap=20,x0=(1080-(bw*5+gap*4))/2,y0=980,i,bx;
+  for(i=0;i<5;i++){
+    bx=x0+i*(bw+gap); var on=GR[i][0]===g[0];
+    x.fillStyle=on?'#c4503a':'#f8f6fb'; x.strokeStyle=on?'#c4503a':'#d2cbdc'; x.lineWidth=3;
+    x.fillRect(bx,y0,bw,150); x.strokeRect(bx,y0,bw,150);
+    x.fillStyle=on?'#ffffff':'#26222f'; x.font='600 64px '+SER; x.fillText(GR[i][0],bx+bw/2,y0+75);
+    x.fillStyle=on?'#ffffff':'#675f77'; x.font='24px '+SAN; x.fillText(GR[i][1].length>4?GR[i][1].slice(0,4):GR[i][1],bx+bw/2,y0+120);
+  }
+  x.fillStyle='#675f77'; x.font='28px '+SAN; x.fillText('你能拿到幾級？',540,1190);
+  x.fillStyle='#26222f'; x.font='30px '+SAN; x.fillText('orz629.github.io/smoke-free',540,1235);
+  x.fillStyle='#675f77'; x.font='22px '+SAN; x.fillText('本指數為遊戲虛構　© 2026 陳穎吾　CC BY-NC-ND 4.0',540,1278);
+  return c;
+}
+function shareGrade(g,score,L,txt){
+  var c=shareCanvas(g,score,L), box=$('#shareimg');
+  var url=c.toDataURL('image/png');
+  box.innerHTML='<img src="'+url+'" alt="成績圖" style="width:100%;border-radius:10px;border:1px solid var(--line)"><p class="sub" style="margin:6px 0 0">長按圖片可以儲存或分享。</p>';
+  box.hidden=false;
+  try{
+    if(c.toBlob&&navigator.share&&window.File){
+      c.toBlob(function(b){
+        if(!b) return;
+        var f=new File([b],'smoke-free-grade.png',{type:'image/png'});
+        if(navigator.canShare&&navigator.canShare({files:[f]})) navigator.share({files:[f],text:txt}).catch(function(){});
+      },'image/png');
+    }
+  }catch(x){}
 }
 function summary(reason){
   mode='scene';M={};
@@ -702,12 +747,15 @@ function summary(reason){
    '<div class="real"><p>現實：國民健康署指出，國內平均每年近 3,000 人死於二手菸害。</p>'+
    '<p>在公告禁菸的場所遇到有人吸菸，可向當地衛生局檢舉，並附上照片或影片；蒐證請保持距離、不要正面衝突。</p>'+
    '<p>吸菸會讓牙周治療後的癒合較差，也較容易復發。國健署免費戒菸專線 0800-636363（戒菸撥 63）。</p></div>'+
-   '<button class="choice" id="cp"><b>複製成績</b><span>貼給朋友看看</span></button>'+
+   '<div id="shareimg" hidden></div>'+
+   '<button class="choice" id="sh"><b>產生分享圖</b><span>存成圖片，貼給朋友看看</span></button>'+
+   '<button class="choice sm" id="cp"><b>只複製文字</b></button>'+
    '<button class="choice one big" id="again"><b>回到選單</b></button>';
   $('#again').onclick=menu;
+  $('#sh').onclick=function(){ shareGrade(g,score,L,txt); };
   $('#cp').onclick=function(){
     var b=$('#cp'), ok=function(){ b.querySelector('b').textContent='已複製'; };
-    try{ navigator.clipboard.writeText(txt).then(ok,function(){ b.querySelector('span').textContent=txt; }); }catch(x){ b.querySelector('span').textContent=txt; }
+    try{ navigator.clipboard.writeText(txt).then(ok,function(){ b.querySelector('b').textContent=txt; }); }catch(x){ b.querySelector('b').textContent=txt; }
   };
 }
 
