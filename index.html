@@ -1488,8 +1488,6 @@ function drawScale(){
     ctx.strokeStyle='#8a7656'; ctx.lineWidth=1.5; var ps=new Path2D(); ps.moveTo(x0,crest(sd,x0)); for(x=x0;sd?x>x1:x<x1;x+=st) ps.lineTo(x,crest(sd,x)); ctx.stroke(ps);
     ctx.save(); ctx.clip(); for(var q=0;q<90;q++){ var px=(sd?W*0.5:0)+hash(q+sd*200)*W*0.5, py=H*0.5+hash(q*3+7+sd)*H*0.5; ctx.fillStyle='rgba(120,96,64,'+(0.12+hash(q)*0.18)+')'; ctx.beginPath(); ctx.ellipse(px,py,2+hash(q+9)*5,1.5+hash(q+4)*3,hash(q)*3,0,6.2832); ctx.fill(); } ctx.restore();
   });
-  /* 牙周囊袋：貼牙面的暗紅肉芽組織 */
-  [0,1].forEach(function(sd){ ctx.beginPath(); for(var y=NECK;y<=(sd?crestR:crestL);y+=6){ var xx=rootEdge(sd,y)+(sd?5:-5); if(y===NECK) ctx.moveTo(xx,y); else ctx.lineTo(xx,y); } ctx.lineTo(rootEdge(sd,sd?crestR:crestL)+(sd?-1:1),sd?crestR:crestL); for(var y2=(sd?crestR:crestL);y2>=NECK;y2-=6) ctx.lineTo(rootEdge(sd,y2),y2); ctx.closePath(); ctx.fillStyle='rgba(140,50,70,0.55)'; ctx.fill(); });
   /* 根岔病變：兩根之間的骨頭被吃掉，剩一個暗洞 */
   ctx.beginPath(); ctx.moveTo(innerEdge(0,FUR),FUR); ctx.lineTo(innerEdge(1,FUR),FUR);
   for(var fy=FUR;fy<=H*0.84;fy+=6) ctx.lineTo(innerEdge(1,fy)+(hash(fy)-0.5)*6,fy);
