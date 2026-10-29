@@ -49,6 +49,10 @@ canvas{display:block;width:100%;height:clamp(200px,52vw,240px);touch-action:none
 .choice b{display:block;font-size:15px}
 .choice span{display:block;font-size:12px;color:var(--muted);line-height:1.45;margin-top:2px}
 .choice.one{grid-column:1 / -1}
+.choices.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.choice.sm{padding:8px 6px;text-align:center}
+.choice.sm b{font-size:14px}
+.choice.sm span{font-size:11px}
 .choice.big{padding:22px 14px;text-align:center;user-select:none;-webkit-user-select:none;touch-action:none}
 .choice:hover{border-color:var(--smoke)}
 .choice:active,.choice.on,.choice[aria-pressed="true"]{border-color:var(--smoke);background:var(--sky)}
@@ -148,7 +152,7 @@ var narr=$('#narr'), choices=$('#choices');
 function head(){ var sc=SC[S.idx]; return '<div class="who">'+(['','章節一','章節二','章節三','章節四'][sc.ch])+' · '+sc.name+'（'+(S.idx+1)+'／'+SC.length+'）</div>'; }
 function say(h){ narr.innerHTML=h; }
 function setChoices(arr){
-  choices.innerHTML='';
+  choices.innerHTML='';choices.className='choices';
   arr.forEach(function(c){
     var b=document.createElement('button');
     b.className='choice'+(c.one?' one':'');
@@ -458,7 +462,7 @@ function startRide(){
   rideUI();
 }
 function rideUI(){
-  choices.innerHTML='';
+  choices.innerHTML='';choices.className='choices';
   var b=document.createElement('button'); b.className='choice one';
   function paint(){ b.innerHTML=M.open?'<b>關窗</b><span>孩子冷得縮起來了</span>':'<b>開窗通風</b><span>味道散得快，但孩子會怕冷，耐心下降</span>'; b.setAttribute('aria-pressed',String(!!M.open)); }
   b.onclick=function(){ M.open=!M.open; paint(); };
@@ -478,7 +482,7 @@ function menu(){
 }
 var COVEROPEN=false, coverFoot=null;
 function coverUI(){
-  choices.innerHTML='';
+  choices.innerHTML='';choices.className='choices';
   var CHN=['完整一輪','章節一','章節二','章節三','章節四'];
   var go=document.createElement('button'); go.type='button'; go.className='choice one'; go.style.cssText='text-align:center'; go.innerHTML='<b>遊戲開始</b><span>祝您今天出門順利</span>';
   go.onclick=function(){ start(CFGCH); }; choices.appendChild(go);
@@ -561,13 +565,13 @@ function scaleStart(){
   scaleUI();
 }
 function dodgeUI(){
-  choices.innerHTML='';
+  choices.innerHTML='';choices.className='choices';
   function mk(t,s,d){var b=document.createElement('button');b.className='choice big';b.innerHTML='<b>'+t+'</b><span>'+s+'</span>';b.addEventListener('pointerdown',function(e){e.preventDefault();setLane(d)});choices.appendChild(b)}
   mk('▲ 上','換到上一條車道',-1);
   mk('▼ 下','換到下一條車道',1);
 }
 function scaleUI(){
-  choices.innerHTML='';
+  choices.innerHTML='';choices.className='choices';
   function mk(t,s,f){var b=document.createElement('button');b.className='choice big';b.innerHTML='<b>'+t+'</b><span>'+s+'</span>';b.addEventListener('pointerdown',function(e){e.preventDefault();f()});choices.appendChild(b)}
   mk('換邊','換到牙根的另一側',function(){ if(mode==='scale'&&M.done) M.side=M.side?0:1; });
   mk('刮','碰到牙結石的瞬間按下',scaleStroke);
@@ -622,7 +626,7 @@ function startPass(after){
   holdUI();
 }
 function holdUI(){
-  choices.innerHTML='';
+  choices.innerHTML='';choices.className='choices';
   var b=document.createElement('button'); b.className='choice one big';
   b.innerHTML='<b>按住憋氣</b><span>放開就吸到一口</span>';
   var on=function(e){e.preventDefault();if(M&&M.t!==undefined)M.hold=true;b.classList.add('on')};
@@ -864,7 +868,7 @@ function findSpots(){
 function startFind(){
   apply({time:-4});
   say(head()+'<p>您停下腳步，用鼻子找方向。</p><p class="gov">點可疑的地方，上方的味道條會告訴您有沒有靠近。十秒內找不到，味道就會一直跟著您。有時候，真的找不到。</p>');
-  choices.innerHTML='';
+  choices.innerHTML='';choices.className='choices';
   startMode('find',function(res,air,sp){
     apply({air:-Math.round(air)});
     if(res==='found'){
@@ -984,14 +988,14 @@ function shutter(){
 function setNear(v){M.near=v;syncPhoto()}
 function syncPhoto(){choices.querySelectorAll('[data-k]').forEach(function(b){b.setAttribute('aria-pressed',String((b.dataset.k==='near')===M.near))})}
 function photoUI(){
-  choices.innerHTML='';
-  var sh=document.createElement('button'); sh.type='button'; sh.className='choice one big'; sh.style.cssText='padding:26px 14px;font-size:20px;border-color:var(--accent)';
-  sh.innerHTML='<b style="font-size:22px">拍照</b><span>按下去就拍下取景框裡的畫面</span>';
+  choices.innerHTML=''; choices.className='choices cols3';
+  var sh=document.createElement('button'); sh.type='button'; sh.className='choice one'; sh.style.cssText='padding:14px 12px;text-align:center;border-color:var(--accent);grid-column:1 / -1';
+  sh.innerHTML='<b style="font-size:20px">拍照</b>';
   sh.addEventListener('pointerdown',function(e){e.preventDefault();shutter()}); choices.appendChild(sh);
-  function mk(t,s,f,k){var b=document.createElement('button');b.type='button';b.className='choice';b.innerHTML='<b>'+t+'</b><span>'+s+'</span>';b.onclick=f;if(k)b.dataset.k=k;choices.appendChild(b)}
-  mk('靠近拍','容易拍到，也容易被發現',function(){setNear(true)},'near');
-  mk('遠距離拍','比較安全，但取景框變小',function(){setNear(false)},'far');
-  var rt=document.createElement('button'); rt.type='button'; rt.className='choice one'; rt.innerHTML='<b>撤退</b><span>放棄這次蒐證</span>'; rt.onclick=function(){finishPhoto('retreat')}; choices.appendChild(rt);
+  function mk(t,s,f,k){var b=document.createElement('button');b.type='button';b.className='choice sm';b.innerHTML='<b>'+t+'</b><span>'+s+'</span>';b.onclick=f;if(k)b.dataset.k=k;choices.appendChild(b)}
+  mk('靠近拍','好拍，易被發現',function(){setNear(true)},'near');
+  mk('遠距離','較安全，框較小',function(){setNear(false)},'far');
+  mk('撤退','放棄蒐證',function(){finishPhoto('retreat')});
   syncPhoto();
 }
 function drawPhoto(){
