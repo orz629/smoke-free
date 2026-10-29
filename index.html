@@ -459,11 +459,10 @@ function menu(){
   say('<h1 style="margin:0;font-family:var(--serif);font-size:22px;line-height:1.3">無菸城市</h1><div class="who" style="font-size:13px;letter-spacing:.06em;margin-bottom:10px">推著娃娃車出門的一天</div>'
     +'<div class="who">文明社會觀光局 · 友善城市宣導</div>'
     +'<p>歡迎來到文明的社會。這裡人人有公德心，處處是禁菸標誌，每一位市民都愛護孩子的健康。</p>'
-    +'<p class="gov">市民滿意度 98%（本數字為遊戲虛構）。請您安心帶著孩子出門。<br>本遊戲內容純屬虛構，如有雷同，那就是現實。</p>'
-    +'<p class="gov" style="font-size:12px">© 2026 陳穎吾　CC BY-NC-ND 4.0<br>商業授權或改作，請聯絡 github.com/orz629</p>');
+    +'<p class="gov">市民滿意度 98%（本數字為遊戲虛構）。請您安心帶著孩子出門。<br>本遊戲內容純屬虛構，如有雷同，那就是現實。</p>');
   coverUI();
 }
-var COVEROPEN=false;
+var COVEROPEN=false, coverFoot=null;
 function coverUI(){
   choices.innerHTML='';
   var CHN=['完整一輪','章節一','章節二','章節三','章節四'];
@@ -474,7 +473,8 @@ function coverUI(){
   tg.innerHTML='<b>情節設定 '+(COVEROPEN?'▲':'▼')+'</b><span>章節：'+CHN[CFGCH]+'　社會風氣：'+(IDEAL?'公民課本版':'現實版')+(COVEROPEN?'':'（點此修改）')+'</span>';
   tg.onclick=function(){ COVEROPEN=!COVEROPEN; coverUI(); };
   choices.appendChild(tg);
-  if(!COVEROPEN) return;
+  coverFoot=function(){var f=document.createElement('div');f.style.cssText='grid-column:1 / -1;text-align:center;font-size:11px;line-height:1.6;color:var(--muted);margin-top:8px';f.innerHTML='© 2026 陳穎吾　CC BY-NC-ND 4.0<br>商業授權或改作，請聯絡 github.com/orz629';choices.appendChild(f)};
+  if(!COVEROPEN){ coverFoot(); return; }
   function grp(t){var d=document.createElement('div');d.style.cssText='grid-column:1 / -1;font-size:11px;letter-spacing:.08em;color:var(--muted);margin-top:4px';d.textContent=t;choices.appendChild(d)}
   function opt(t,s,on,f){
     var b=document.createElement('button'); b.type='button'; b.className='choice';
@@ -486,6 +486,7 @@ function coverUI(){
   grp('社會風氣');
   opt('公民課本版','人人有公德心：勸阻比較容易成功，煙霧傷害較小',IDEAL,function(){IDEAL=true});
   opt('現實版','維持原本的樣子',!IDEAL,function(){IDEAL=false});
+  coverFoot();
 }
 function drawCover(){
   drawWorld('store',{seed:11,sign:true});
