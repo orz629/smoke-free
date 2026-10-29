@@ -69,7 +69,7 @@ canvas{display:block;width:100%;height:clamp(200px,52vw,240px);touch-action:none
 </style>
 
 <div class="app">
-  <div class="brand"><span class="t">無菸城市</span><span class="tag">原型 v0.7 · 章節一至四 <button id="snd" class="choice" style="padding:1px 8px;font-size:11px;margin-left:6px" type="button">聲音：開</button></span></div>
+  <div class="brand"><span class="t">無菸城市</span><span class="tag">原型 v0.7 · 章節一至四 <button id="snd" class="choice" style="padding:1px 8px;font-size:11px;margin-left:6px" type="button">聲音：音樂＋音效</button></span></div>
   <div class="hud">
     <div class="m"><label><em id="l-air" style="font-style:normal">寶寶空氣</em><span id="v-air">100</span></label><div class="bar"><i id="b-air"></i></div></div>
     <div class="m"><label>耐心<span id="v-pat">100</span></label><div class="bar"><i id="b-pat"></i></div></div>
@@ -175,8 +175,9 @@ function afterAction(msg,gov){
 }
 
 /* ---------- 聲音（程式合成，無外部音檔） ---------- */
-var AU={c:null,m:null,nb:null,nodes:[],tm:[],lp:null,on:true,ch:1};
-try{ if(localStorage.getItem('snd')==='0') AU.on=false }catch(e){}
+var AU={c:null,m:null,nb:null,nodes:[],tm:[],lp:null,on:true,mode:2,ch:1};
+try{ var sm=localStorage.getItem('snd2'); if(sm==='0'||sm==='1'||sm==='2') AU.mode=Number(sm); AU.on=AU.mode>0 }catch(e){}
+var SNDTXT=['聲音：關','聲音：僅音效','聲音：音樂＋音效'];
 function auInit(){
   if(AU.c) { try{ if(AU.c.state==='suspended') AU.c.resume() }catch(e){} return; }
   var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
@@ -187,10 +188,11 @@ function auInit(){
     AU.nb=b; auAmb(AU.ch);
   }catch(e){ AU.c=null; }
 }
-function auSet(on){
-  AU.on=on; try{ localStorage.setItem('snd',on?'1':'0') }catch(e){}
-  if(AU.m) AU.m.gain.setTargetAtTime(on?0.5:0,AU.c.currentTime,0.05);
-  var b=$('#snd'); if(b) b.textContent=on?'聲音：開':'聲音：關';
+function auSet(mode){
+  AU.mode=mode; AU.on=mode>0; try{ localStorage.setItem('snd2',String(mode)) }catch(e){}
+  if(AU.m) AU.m.gain.setTargetAtTime(AU.on?0.5:0,AU.c.currentTime,0.05);
+  var b=$('#snd'); if(b) b.textContent=SNDTXT[mode];
+  auAmb(AU.ch);
 }
 function auStop(){
   AU.tm.forEach(function(t){clearInterval(t)}); AU.tm=[];
@@ -223,25 +225,38 @@ function sfx(k){
   else if(k==='blip') tone(880,0.12,'sine',0.045);
   else if(k==='end'){ tone(330,1.4,'sine',0.05,0,196); tone(262,1.6,'sine',0.04,0.2,147); }
 }
+var SCALES={
+  1:{n:[440,523.25,587.33,659.25,783.99,880],step:900,p:0.55,g:0.05},
+  2:{n:[659.25,783.99,987.77,1174.66],step:1500,p:0.4,g:0.04},
+  3:{n:[987.77,1318.51,1479.98],step:2300,p:0.3,g:0.035},
+  4:{n:[329.63,392,440,493.88,587.33],step:1700,p:0.45,g:0.05}
+};
+function note(f,g,bus){
+  var c=AU.c, t=c.currentTime, o=c.createOscillator(), o2=c.createOscillator(), v=c.createGain();
+  o.type='sine'; o2.type='triangle'; o.frequency.value=f; o2.frequency.value=f*2.0;
+  var v2=c.createGain(); v2.gain.value=0.18; o2.connect(v2); v2.connect(v);
+  v.gain.setValueAtTime(0.0001,t); v.gain.exponentialRampToValueAtTime(g,t+0.015); v.gain.exponentialRampToValueAtTime(0.0001,t+2.6);
+  o.connect(v); v.connect(bus); o.start(t); o2.start(t); o.stop(t+2.7); o2.stop(t+2.7);
+}
 function auAmb(ch){
   AU.ch=ch; if(!AU.c) return; auStop();
-  var c=AU.c, f={1:110,2:98,3:82.4,4:73.4}[ch]||110;
-  var lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1200; lp.Q.value=0.5; AU.lp=lp;
-  var dg=c.createGain(); dg.gain.value=0.0001; dg.gain.setTargetAtTime(0.09,c.currentTime,1.5); lp.connect(dg); dg.connect(AU.m);
-  [[f,'sine'],[f*1.189,'sine'],[f*2.0,'triangle']].forEach(function(p,i){
-    var o=c.createOscillator(), v=c.createGain(); o.type=p[1]; o.frequency.value=p[0]; o.detune.value=(i-1)*4; v.gain.value=i===2?0.25:0.6;
-    o.connect(v); v.connect(lp); o.start(); AU.nodes.push(o);
-  });
-  var lf=c.createOscillator(), lg=c.createGain(); lf.frequency.value=0.07; lg.gain.value=0.03; lf.connect(lg); lg.connect(dg.gain); lf.start(); AU.nodes.push(lf);
-  if(AU.nb){
-    var s=c.createBufferSource(), fl=c.createBiquadFilter(), v2=c.createGain();
-    s.buffer=AU.nb; s.loop=true; fl.type=ch===3?'highpass':'lowpass'; fl.frequency.value=ch===3?5500:({1:420,2:800,4:300}[ch]||400);
-    v2.gain.value=ch===3?0.006:0.012; s.connect(fl); fl.connect(v2); v2.connect(AU.m); s.start(); AU.nodes.push(s);
-  }
-  if(ch===2) AU.tm.push(setInterval(function(){ if(AU.on) tone(1000,0.07,'sine',0.018) },5200));
-  if(ch===3) AU.tm.push(setInterval(function(){ if(AU.on) nz(0.025,0.04,'highpass',4500,1) },1000));
+  if(AU.mode!==2) return;
+  var c=AU.c, S0=SCALES[ch]||SCALES[1];
+  var lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3200; lp.Q.value=0.4; AU.lp=lp;
+  var bus=c.createGain(); bus.gain.value=1; bus.connect(lp); lp.connect(AU.m);
+  var dl=c.createDelay(1.5); dl.delayTime.value=0.42; var fb=c.createGain(); fb.gain.value=0.38; var wet=c.createGain(); wet.gain.value=0.5;
+  var df=c.createBiquadFilter(); df.type='lowpass'; df.frequency.value=2200;
+  bus.connect(dl); dl.connect(df); df.connect(fb); fb.connect(dl); df.connect(wet); wet.connect(lp);
+  var last=-1;
+  AU.tm.push(setInterval(function(){
+    if(!AU.on||AU.mode!==2||Math.random()>S0.p) return;
+    var k; do{ k=(Math.random()*S0.n.length)|0 }while(k===last&&S0.n.length>1); last=k;
+    note(S0.n[k],S0.g*(0.7+Math.random()*0.5),bus);
+  },S0.step));
+  if(ch===3) AU.tm.push(setInterval(function(){ if(AU.on) nz(0.025,0.03,'highpass',4500,1) },1000));
+  if(ch===2) AU.tm.push(setInterval(function(){ if(AU.on) tone(1000,0.07,'sine',0.012) },5200));
 }
-function auSmoke(v){ if(AU.lp&&AU.c) AU.lp.frequency.setTargetAtTime(220+Math.max(0,Math.min(100,v))*12,AU.c.currentTime,0.4); }
+function auSmoke(v){ if(AU.lp&&AU.c) AU.lp.frequency.setTargetAtTime(700+Math.max(0,Math.min(100,v))*28,AU.c.currentTime,0.4); }
 ['pointerup','click','touchend'].forEach(function(ev){ window.addEventListener(ev,function(){ auInit(); },true); });
 window.addEventListener('pointerdown',function(e){
   auInit();
@@ -1124,7 +1139,7 @@ function loop(ts){
 }
 
 /* ---------- 開場 ---------- */
-(function(){ var b=$('#snd'); if(!b) return; b.textContent=AU.on?'聲音：開':'聲音：關'; b.addEventListener('click',function(){ auInit(); auSet(!AU.on); }); })();
+(function(){ var b=$('#snd'); if(!b) return; b.textContent=SNDTXT[AU.mode]; b.addEventListener('click',function(){ auInit(); auSet((AU.mode+2)%3); }); })();
 menu();
 requestAnimationFrame(loop);
 })();
