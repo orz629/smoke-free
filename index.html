@@ -43,6 +43,14 @@ canvas{display:block;width:100%;height:clamp(200px,52vw,240px);touch-action:none
 .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .choice{font:inherit;color:inherit;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 12px;cursor:pointer;min-width:0}
 .choice b{display:block;font-size:15px}
+.startbtn{position:relative;text-align:center;padding:16px 30% 16px 12px;border:2px solid #d9a441;color:#2b2530;
+  background:repeating-linear-gradient(90deg,rgba(120,80,10,.16) 0 1px,transparent 1px 6px) right/22% 100% no-repeat,linear-gradient(90deg,#fffdf7 0,#fffdf7 78%,#e8b84a 78%,#d9a441 100%);
+  box-shadow:0 2px 0 rgba(0,0,0,.08);animation:startPulse 2.2s ease-in-out infinite}
+.startbtn b{font-size:19px;letter-spacing:.12em}
+.startbtn span{color:#6b6070}
+.startbtn::after{content:"";position:absolute;right:calc(22% - 3px);top:0;bottom:0;width:2px;background:rgba(120,80,10,.35)}
+@keyframes startPulse{0%,100%{box-shadow:0 0 0 0 rgba(232,184,74,.6)}50%{box-shadow:0 0 0 9px rgba(232,184,74,0)}}
+@media (prefers-reduced-motion:reduce){.startbtn{animation:none}}
 .choice span{display:block;font-size:12px;color:var(--muted);line-height:1.45;margin-top:2px}
 .choice.one{grid-column:1 / -1}
 .choices.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -488,7 +496,7 @@ var COVEROPEN=false, coverFoot=null;
 function coverUI(){
   choices.innerHTML='';choices.className='choices';
   var CHN=['完整一輪','章節一','章節二','章節三','章節四'];
-  var go=document.createElement('button'); go.type='button'; go.className='choice one'; go.style.cssText='text-align:center'; go.innerHTML='<b>遊戲開始</b><span>祝您今天出門順利</span>';
+  var go=document.createElement('button'); go.type='button'; go.className='choice one startbtn'; go.innerHTML='<b>遊戲開始</b><span>祝您今天出門順利</span>';
   go.onclick=function(){ start(CFGCH); }; choices.appendChild(go);
   var tg=document.createElement('button'); tg.type='button'; tg.className='choice one';
   tg.setAttribute('aria-expanded',String(COVEROPEN));
