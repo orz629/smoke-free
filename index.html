@@ -735,6 +735,9 @@ function summary(reason){
   e.innerHTML=
    '<h2>'+T[0]+'</h2><p class="sub">'+T[1]+'</p>'+
    '<div class="grade"><div class="g">'+g[0]+'</div><div class="n"><b>今日文明指數 '+score+'：'+g[1]+'</b>'+g[2]+'<br><small>本指數為遊戲虛構。'+(full?'':'僅計算已經玩過的章節。')+'</small></div></div>'+
+   '<div id="shareimg" hidden></div>'+
+   '<button class="choice" id="sh"><b>產生分享圖</b><span>存成圖片，貼給朋友看看</span></button>'+
+   '<button class="choice sm" id="cp"><b>只複製文字</b></button>'+
    cards+
    '<dl class="stats">'+
    '<dt>吸入口數（其中被動）</dt><dd>'+tot.puffs+' 口（'+tot.passive+' 口）</dd>'+
@@ -747,9 +750,6 @@ function summary(reason){
    '<div class="real"><p>現實：國民健康署指出，國內平均每年近 3,000 人死於二手菸害。</p>'+
    '<p>在公告禁菸的場所遇到有人吸菸，可向當地衛生局檢舉，並附上照片或影片；蒐證請保持距離、不要正面衝突。</p>'+
    '<p>吸菸會讓牙周治療後的癒合較差，也較容易復發。國健署免費戒菸專線 0800-636363（戒菸撥 63）。</p></div>'+
-   '<div id="shareimg" hidden></div>'+
-   '<button class="choice" id="sh"><b>產生分享圖</b><span>存成圖片，貼給朋友看看</span></button>'+
-   '<button class="choice sm" id="cp"><b>只複製文字</b></button>'+
    '<button class="choice one big" id="again"><b>回到選單</b></button>';
   $('#again').onclick=menu;
   $('#sh').onclick=function(){ shareGrade(g,score,L,txt); };
