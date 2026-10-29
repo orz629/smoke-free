@@ -57,6 +57,7 @@ canvas{display:block;width:100%;height:clamp(200px,52vw,240px);touch-action:none
 @media (prefers-reduced-motion:reduce){.startbtn,.startbtn::before{animation:none}}
 .choice span{display:block;font-size:12px;color:var(--muted);line-height:1.45;margin-top:2px}
 .choice.one{grid-column:1 / -1}
+.chrow{grid-column:1 / -1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .choices.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .choice.sm{padding:8px 6px;text-align:center}
 .choice.sm b{font-size:14px}
@@ -535,7 +536,13 @@ function coverUI(){
     b.onclick=function(){ f(); coverUI(); }; choices.appendChild(b);
   }
   grp('章節');
-  [['完整一輪','四個章節接在一起',0],['章節一','逛街出門',1],['章節二','醫院回診',2],['章節三','診間篇',3],['章節四','下班回家',4]].forEach(function(c){ opt(c[0],c[1],CFGCH===c[2],function(){CFGCH=c[2]}); });
+  opt('完整一輪','四個章節接在一起',CFGCH===0,function(){CFGCH=0}); choices.lastChild.classList.add('one');
+  var row=document.createElement('div'); row.className='chrow';
+  [['章節一','逛街出門',1],['章節二','醫院回診',2],['章節三','診間篇',3],['章節四','下班回家',4]].forEach(function(c){
+    var b=document.createElement('button'); b.type='button'; b.className='choice sm'; b.innerHTML='<b>'+c[0]+'</b><span>'+c[1]+'</span>'; b.setAttribute('aria-pressed',String(CFGCH===c[2]));
+    b.onclick=function(){ CFGCH=c[2]; coverUI(); }; row.appendChild(b);
+  });
+  choices.appendChild(row);
   grp('社會風氣');
   opt('公民課本版','人人有公德心：勸阻比較容易成功，煙霧傷害較小',IDEAL,function(){IDEAL=true});
   opt('現實版','維持原本的樣子',!IDEAL,function(){IDEAL=false});
@@ -1466,7 +1473,7 @@ function drawScale(){
     return base*(1-d*d)+hi*d*d+(hash(Math.floor(x/6)+side*50)-0.5)*9;
   }
   [0,1].forEach(function(sd){
-    ctx.beginPath(); var x0=sd?W:0, x1=cx, st=sd?-6:6, x;
+    ctx.beginPath(); var x0=sd?W:0, x1=cx+(sd?-4:4), st=sd?-6:6, x;
     ctx.moveTo(x0,H); ctx.lineTo(x0,crest(sd,x0));
     for(x=x0;sd?x>x1:x<x1;x+=st) ctx.lineTo(x,crest(sd,x));
     ctx.lineTo(x1,H); ctx.closePath();
