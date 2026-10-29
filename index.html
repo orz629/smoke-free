@@ -454,29 +454,35 @@ function menu(){
   auAmb(1);
   SC=ALL; reset(); S.idx=0; mode='cover'; M={}; parts.length=0;
   $('#end').hidden=true; $('#play').hidden=false; $('.hud').style.display='none';
+  COVEROPEN=false;
   say('<div class="who">文明社會觀光局 · 友善城市宣導</div>'
     +'<p>歡迎來到文明的社會。這裡人人有公德心，處處是禁菸標誌，每一位市民都愛護孩子的健康。</p>'
     +'<p class="gov">市民滿意度 98%（本數字為遊戲虛構）。請您安心帶著孩子出門。<br>本遊戲內容純屬虛構，如有雷同，那就是現實。</p>');
   coverUI();
 }
+var COVEROPEN=false;
 function coverUI(){
   choices.innerHTML='';
-  function grp(t){var d=document.createElement('div');d.style.cssText='grid-column:1 / -1;font-size:11px;letter-spacing:.08em;color:var(--muted);margin-top:4px';d.textContent=t;choices.appendChild(d)}
-  function opt(t,s,on,f,list){
-    var b=document.createElement('button'); b.type='button'; b.className='choice'; b.innerHTML='<b>'+t+'</b>'+(s?'<span>'+s+'</span>':'');
-    b.setAttribute('aria-pressed',String(!!on));
-    b.onclick=function(){ f(); list.forEach(function(x){x.setAttribute('aria-pressed',String(x===b))}); };
-    list.push(b); choices.appendChild(b);
-  }
-  grp('情節設定：章節');
-  var L1=[], chs=[['完整一輪','四個章節接在一起',0],['章節一','逛街出門',1],['章節二','看診日',2],['章節三','診間篇',3],['章節四','下班回家',4]];
-  chs.forEach(function(c){ opt(c[0],c[1],CFGCH===c[2],function(){CFGCH=c[2]},L1); });
-  grp('情節設定：社會風氣');
-  var L2=[];
-  opt('公民課本版','人人有公德心：勸阻比較容易成功，煙霧傷害較小',IDEAL,function(){IDEAL=true},L2);
-  opt('現實版','維持原本的樣子',!IDEAL,function(){IDEAL=false},L2);
-  var go=document.createElement('button'); go.type='button'; go.className='choice one'; go.style.cssText='margin-top:6px;text-align:center'; go.innerHTML='<b>遊戲開始</b><span>祝您今天出門順利</span>';
+  var CHN=['完整一輪','章節一','章節二','章節三','章節四'];
+  var go=document.createElement('button'); go.type='button'; go.className='choice one'; go.style.cssText='text-align:center'; go.innerHTML='<b>遊戲開始</b><span>祝您今天出門順利</span>';
   go.onclick=function(){ start(CFGCH); }; choices.appendChild(go);
+  var tg=document.createElement('button'); tg.type='button'; tg.className='choice one';
+  tg.setAttribute('aria-expanded',String(COVEROPEN));
+  tg.innerHTML='<b>情節設定 '+(COVEROPEN?'▲':'▼')+'</b><span>章節：'+CHN[CFGCH]+'　社會風氣：'+(IDEAL?'公民課本版':'現實版')+(COVEROPEN?'':'（點此修改）')+'</span>';
+  tg.onclick=function(){ COVEROPEN=!COVEROPEN; coverUI(); };
+  choices.appendChild(tg);
+  if(!COVEROPEN) return;
+  function grp(t){var d=document.createElement('div');d.style.cssText='grid-column:1 / -1;font-size:11px;letter-spacing:.08em;color:var(--muted);margin-top:4px';d.textContent=t;choices.appendChild(d)}
+  function opt(t,s,on,f){
+    var b=document.createElement('button'); b.type='button'; b.className='choice';
+    b.innerHTML='<b>'+t+'</b>'+(s?'<span>'+s+'</span>':''); b.setAttribute('aria-pressed',String(!!on));
+    b.onclick=function(){ f(); coverUI(); }; choices.appendChild(b);
+  }
+  grp('章節');
+  [['完整一輪','四個章節接在一起',0],['章節一','逛街出門',1],['章節二','看診日',2],['章節三','診間篇',3],['章節四','下班回家',4]].forEach(function(c){ opt(c[0],c[1],CFGCH===c[2],function(){CFGCH=c[2]}); });
+  grp('社會風氣');
+  opt('公民課本版','人人有公德心：勸阻比較容易成功，煙霧傷害較小',IDEAL,function(){IDEAL=true});
+  opt('現實版','維持原本的樣子',!IDEAL,function(){IDEAL=false});
 }
 function drawCover(){
   drawWorld('store',{seed:11,sign:true});
