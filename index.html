@@ -1,4 +1,3 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>無菸城市：推著娃娃車出門的一天</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@600&display=swap">
@@ -88,7 +87,7 @@ canvas{display:block;width:100%;height:clamp(200px,52vw,240px);touch-action:none
 </style>
 
 <div class="app">
-  <div class="brand"><span class="t">無菸城市</span><span class="tag">v1.1 · 章節一至四 <button id="snd" class="choice" style="padding:1px 8px;font-size:11px;margin-left:6px" type="button">聲音：音樂＋音效</button></span></div>
+  <div class="brand"><span class="t">無菸城市</span><span class="tag">v1.2 · 章節一至四 <button id="snd" class="choice" style="padding:1px 8px;font-size:11px;margin-left:6px" type="button">聲音：音樂＋音效</button></span></div>
   <div class="hud">
     <div class="m"><label><em id="l-air" style="font-style:normal">寶寶空氣</em><span id="v-air">100</span></label><div class="bar"><i id="b-air"></i></div></div>
     <div class="m"><label>耐心<span id="v-pat">100</span></label><div class="bar"><i id="b-pat"></i></div></div>
@@ -128,13 +127,15 @@ var ALL=[
  {ch:4,kind:'school',name:'學校門口',who:'接送的家長',text:'下班後去接孩子放學。校門口的圍牆上掛著「校園周邊禁菸」的布條，布條下方，一位等孩子的家長正點起菸，旁邊就是一排排小書包。',accept:0.05,sign:true,tight:false,seed:17},
  {ch:4,kind:'find',name:'回家的巷子',who:'',text:'天黑了，巷子裡的燈忽明忽暗。煙味從前面飄過來，很濃，但看不到人。孩子已經睡著了，您不想讓他吸到。',accept:0.05,sign:false,tight:false,dark:true,seed:27},
  {ch:4,kind:'market',name:'夜市入口',who:'攤販',text:'回家前繞進夜市買晚餐。人擠人，燈光昏黃，攤位旁的老闆一邊顧爐火一邊抽菸，煙味混著炸物的油煙，一路壓到孩子的臉上。',accept:0.03,sign:false,tight:true,dark:true,seed:19},
- {ch:4,kind:'balcony',name:'社區樓下',who:'樓上住戶',elev:74,text:'終於到家樓下了。抬頭一看，三樓的陽台有一點紅光，煙正順著風，一路飄進一樓大廳。您不知道是哪一戶。',accept:0.04,sign:false,tight:false,dark:true,seed:25}
+ {ch:4,kind:'balcony',name:'社區樓下',who:'樓上住戶',elev:74,text:'終於到家樓下了。抬頭一看，三樓的陽台有一點紅光，煙正順著風，一路飄進一樓大廳。您不知道是哪一戶。',accept:0.04,sign:false,tight:false,dark:true,seed:25},
+ {ch:4,kind:'lift',name:'社區電梯',who:'',nosmoker:true,text:'好不容易進了大廳，您推著娃娃車按下電梯。門一開，一股菸味撲面而來。鏡子旁貼著「電梯全面禁菸」，地板上有一小撮菸灰，廂內一個人也沒有。',accept:0,sign:false,tight:false,seed:29},
+ {ch:4,kind:'laundry',name:'回到家',who:'',nosmoker:true,text:'終於回到家，孩子睡了。您把一天穿過的外套丟進洗衣籃，湊近一聞，那股味道還在。',accept:0,sign:false,tight:false,seed:31}
 ];
 var SC=ALL;
 
 var S={};
 function reset(){
-  S.air=100;S.pat=100;S.time=100;S.puffs=0;S.passive=0;S.idx=0;S.passEv=0;S.ach=false;S.cab=0;S.ch3=false;S.smell=0;S.promise=0;S.edu=0;S.refer=0;S.referSent=0;S.scaleN=0;S.scaleQ=0;S.probed=false;S.line='';S.visit=1;
+  S.air=100;S.pat=100;S.time=100;S.puffs=0;S.passive=0;S.idx=0;S.passEv=0;S.ach=false;S.cab=0;S.ch3=false;S.smell=0;S.promise=0;S.edu=0;S.refer=0;S.referSent=0;S.scaleN=0;S.scaleQ=0;S.lift=0;S.probed=false;S.line='';S.visit=1;
   S.st={detour:0,road:0,rush:0,hits:0,tries:0,ok:0,photos:0,caught:0,reports:0};
   S.log=[];S.snapped=0;S.base=null;
   hud();
@@ -313,10 +314,12 @@ function enterScene(i){
     ]);
     return;
   }
+  if(sc.kind==='laundry') return laundryScene(sc);
   say(head()+'<p>'+sc.text+'</p>');
   var labs={detour:['繞路',sc.tight?'路口太窄，要多花時間':'安全但花時間'],rush:['加速通過','衝過煙霧（閃躲小遊戲）'],persuade:['勸阻','結果由骰子決定'],photo:['拍照檢舉','蒐證，再打電話檢舉']};
   if(sc.kind==='stairs'){labs.detour=['轉身離開','改排另一部電梯，要等很久'];labs.persuade=['找警衛反映','看警衛怎麼說'];labs.photo=['拍照檢舉','光線暗、煙霧多，取景窗變小'];}
   if(sc.kind==='taxi'){labs.detour=['改叫車軟體','要在路邊等十分鐘'];labs.rush=['上車','直接坐上第一台'];labs.persuade=['要求司機熄菸','結果由骰子決定'];}
+  if(sc.kind==='lift'){labs.detour=['等下一部','要等很久'];labs.rush=['硬擠進去','按關門，屏住呼吸'];labs.persuade=['按緊急通話鈕反映','管理室說不定有人'];labs.photo=['拍照存證','拍地上的菸灰與告示'];}
   if(sc.kind==='balcony'){labs.detour=['退到騎樓等','等煙散掉再進去'];labs.rush=['衝進大廳','閃躲小遊戲'];labs.persuade=['按對講機反映','不知道是哪一戶，結果由骰子決定'];}
   setChoices([
     {t:labs.detour[0],s:labs.detour[1],f:detour},
@@ -325,13 +328,24 @@ function enterScene(i){
     {t:labs.photo[0],s:labs.photo[1],f:photo}
   ]);
 }
+function laundryScene(sc){
+  var stink=Math.round(clamp((S.smell||0)*0.5+(S.cab?25:0)+(S.lift?18:0)+Math.min(30,S.puffs*1.2)));
+  S.st.cloth=stink;
+  var lab=stink>60?'很重':stink>30?'還在':'淡淡的';
+  say(head()+'<p>'+sc.text+'</p><p class="gov">衣服上的味道：'+stink+'%（'+lab+'）。</p>');
+  setChoices([
+    {t:'直接洗',s:'丟進洗衣機，時間 -10',f:function(){ apply({time:-10,pat:-2}); afterAction('洗衣機轉完，味道還在，只是多了洗衣精的香味。','明天，還是得再出門。'); }},
+    {t:'掛陽台吹風',s:'讓風把味道吹散',f:function(){ apply({air:-6,pat:-2}); afterAction('風把味道吹散了，也把樓上的煙吹了下來。','明天，還是得再出門。'); }},
+    {t:'放著，明天再說',s:'太累了，先睡',f:function(){ apply({air:-4}); afterAction('半夜，孩子在睡夢中咳了兩聲。您起來看了一下，把窗戶開了一條縫。','明天，還是得再出門。'); }}
+  ]);
+}
 function next(){
   var i=S.idx+1;
   if(i>=SC.length){ end('done'); return; }
   if(SC[i].ch!==SC[S.idx].ch){ if(SC===ALL) snapChap(SC[S.idx].ch); chapterBreak(i); return; }
   var fi=SC.length>=5?3:1;
   var force=(i===fi&&S.passEv===0);
-  if((SC[i].ch<3||SC[i].ch===4)&&SC[i].kind!=='ride'&&(force||(i>=1&&Math.random()<0.4))){ S.passEv++; S.passSc=SC[i]; startPass(function(){enterScene(i)}); }
+  if((SC[i].ch<3||SC[i].ch===4)&&SC[i].kind!=='ride'&&SC[i].kind!=='lift'&&SC[i].kind!=='laundry'&&(force||(i>=1&&Math.random()<0.4))){ S.passEv++; S.passSc=SC[i]; startPass(function(){enterScene(i)}); }
   else enterScene(i);
 }
 
@@ -340,6 +354,7 @@ function detour(){
   var sc=SC[S.idx]; S.st.detour++;
   if(sc.kind==='stairs'){apply({air:-2,pat:-8,time:-14});return afterAction('您轉身離開，改排另一部電梯，多等了好一陣子。孩子開始吵著要回家。');}
   if(sc.kind==='taxi'){apply({air:-1,pat:-8,time:-16});return afterAction('您改用叫車軟體，在路邊站著等了十分鐘。孩子靠在您身上，耐心條只剩一點。');}
+  if(sc.kind==='lift'){apply({air:-1,pat:-8,time:-14}); if(Math.random()<0.3){apply({air:-4}); return afterAction('下一部來了，味道也來了。','電梯裡的菸味，不會因為換一部就消失。');} return afterAction('下一部來了，裡面很乾淨。孩子問：「電梯怎麼那麼慢？」');}
   if(sc.kind==='balcony'){apply({air:-2,pat:-6,time:-10});return afterAction('您抱著孩子退到騎樓，等那一陣煙散掉，再快步進大廳。電梯門打開，裡面還留著淡淡的菸味。');}
   apply({air:-3,pat:-6,time:sc.tight?-18:-12});
   if(Math.random()<(sc.tight?0.6:0.3)){
@@ -357,6 +372,7 @@ function detour(){
   }
 }
 function rush(){
+  if(SC[S.idx].kind==='lift'){S.lift=1;apply({air:-8,pat:-2,time:-2});return afterAction('您按下關門鈕，屏住呼吸。一路到十二樓，孩子還是咳了兩聲。','三手菸殘留，不需要有人當場在抽。');}
   if(SC[S.idx].kind==='taxi'){S.cab=1;apply({air:-8,pat:-3,time:-2});return afterAction('您硬著頭皮上了第一台車。座椅和車內都是菸味，孩子開始咳。','三手菸殘留的味道，會一路跟著您。');}
   S.st.rush++; apply({time:-4});
   say(head()+'<p>深吸一口氣，衝過去。</p><p class="gov">點下方的上下鈕切換車道（鍵盤可用上下鍵）。風會把煙吹向不同車道，轉向前箭頭會閃爍預警。</p>');
@@ -372,6 +388,7 @@ function rush(){
 function persuade(){
   var sc=SC[S.idx]; if(sc.kind==='stairs') return guard(); S.st.tries++;
   var r=Math.random(), acc=sc.accept*(IDEAL?4:1);
+  if(sc.kind==='lift'){ apply({pat:-8,time:-3}); return afterAction('您按下緊急通話鈕。管理室回覆：「公告已經貼了，我們會再加強宣導。」','管理室表示已加強宣導。'); }
   if(sc.kind==='find'&&sc.elev){ apply({air:-4,pat:-8}); return afterAction(pick(['您朝樓上喊了一聲，窗戶裡沒有人回應。','樓上的人探頭看了一眼，又縮回去，煙繼續飄。'])); }
   if(sc.kind==='balcony'){
     if(r<acc){ S.st.ok++; S.ach=true; apply({air:10,pat:5}); return afterAction('管理員聽完說：「好，我廣播一下。」過了一會兒，陽台的紅光熄了。','成就解鎖：今天有一個人聽進去。'); }
@@ -412,6 +429,7 @@ function acceptGame(){
 /* ---------- 路線三：拍照檢舉 ---------- */
 function photo(){
   S.st.photos++; apply({time:-3});
+  if(SC[S.idx].kind==='lift'){ say(head()+'<p>您蹲下來，把地上的菸灰和牆上的告示一起拍進畫面。</p><p class="gov">這次廂內沒有人，也就不會被發現。</p>'); setChoices([{t:'撥電話檢舉',s:'電梯廂內是法定的禁菸場所',one:true,f:report}]); return; }
   say(head()+'<p>您悄悄舉起手機。</p><p class="gov">取景框會左右快速移動，抓準時機按下大大的「拍照」鈕（或直接點畫面），就會拍下取景框裡的人、菸'+(SC[S.idx].sign?'、禁菸標誌':'')+'。靠近拍比較容易拍到，也比較容易被發現。菸燒完就沒有證據了。</p>');
   startMode('photo',function(res){
     if(res==='ok'){ S.st.caught+=0; return report(); }
@@ -444,7 +462,7 @@ function report(){
     if(u==='eco') return screen(R.wk?'「環保局假日不上班，請平日再來電。」':'「我們這邊主要處理亂丟菸蒂，禁菸場所的違規吸菸，請洽衛生局。」');
     if(R.wk&&!R.hwk){ R.hwk=true; return screen('「今天是假日，本局休息，請於上班日再來電。」您再撥一次，這次有人值班收件。'); }
     apply({pat:-8});
-    var k=SC[S.idx].kind; if(k==='balcony') return afterAction('您把照片和時間傳給管委會。回覆是：「不確定是哪一戶，我們會在公布欄貼個公告。」','您的檢舉已受理，請等待十至三十個工作天。'); if(k==='stairs') return afterAction('衛生局已受理您的檢舉。院方回覆：「已加強巡查。」下次回診時，樓梯間的菸蒂還在原處。','您的檢舉已受理，請等待十至三十個工作天。'); if(k==='taxi') return afterAction('承辦人聽完說：「對方不在車上抽，也不在公告範圍內，這個狀況，我們再研究看看。」','您的檢舉已受理，請等待十至三十個工作天。'); afterAction('衛生局已受理您的檢舉，並請您上傳照片。稽查員抵達時，現場只剩一地菸蒂，行為人早已離開，無法裁處。','您的檢舉已受理，請等待十至三十個工作天。');
+    var k=SC[S.idx].kind; if(k==='lift') return afterAction('衛生局受理了：電梯廂內屬於禁菸場所，違規吸菸可罰二千至一萬元。承辦人接著問：「請問行為人是誰？」您翻出照片，只有一撮菸灰。承辦人說：「這樣無法確認行為人，請先洽管委會調閱監視器。」','您的檢舉已受理，請等待十至三十個工作天。'); if(k==='balcony') return afterAction('您把照片和時間傳給管委會。回覆是：「不確定是哪一戶，我們會在公布欄貼個公告。」','您的檢舉已受理，請等待十至三十個工作天。'); if(k==='stairs') return afterAction('衛生局已受理您的檢舉。院方回覆：「已加強巡查。」下次回診時，樓梯間的菸蒂還在原處。','您的檢舉已受理，請等待十至三十個工作天。'); if(k==='taxi') return afterAction('承辦人聽完說：「對方不在車上抽，也不在公告範圍內，這個狀況，我們再研究看看。」','您的檢舉已受理，請等待十至三十個工作天。'); afterAction('衛生局已受理您的檢舉，並請您上傳照片。稽查員抵達時，現場只剩一地菸蒂，行為人早已離開，無法裁處。','您的檢舉已受理，請等待十至三十個工作天。');
   }
   screen('拍到了。現在要檢舉，但您得先找對單位。');
 }
@@ -458,7 +476,7 @@ function chapterBreak(i){
   mode='scene'; M={};
   if(SC[i].ch===4){
     S.ch3=false; S.air=Math.max(S.air,80); S.pat=Math.max(S.pat,70); S.time=100; hud();
-    say('<div class="who">章節四 · 下班回家</div><p>下班了。您換下白袍，去學校接孩子，再一起回家。</p><p class="gov">這一章的地點是校園周邊、夜市和自家樓下，都是您每天會經過的地方。</p>');
+    say('<div class="who">章節四 · 下班回家</div><p>下班了。您換下白袍，去學校接孩子，再一起回家。</p><p class="gov">這一章的地點是校園周邊、夜市、自家樓下的電梯，最後是家裡，都是您每天會經過的地方。</p>');
     setChoices([{t:'出發去接孩子',one:true,f:function(){enterScene(i)}}]);
     return;
   }
@@ -679,7 +697,8 @@ function chapLine(r){
   if(d.guard) a.push('找警衛 '+d.guard+' 次');
   if(d.lost) a.push('找不到煙味源頭 '+d.lost+' 次');
   if(d.wind) a.push('風向改變 '+d.wind+' 次');
-  var rem={1:'街上沒有人需要為這些煙負責。',2:'在醫院，二手菸也沒有放過孩子。',4:'連回到家門口，煙都先到了。'}[r.ch];
+  if(d.cloth) a.push('衣服上的味道 '+d.cloth+'%');
+  var rem={1:'街上沒有人需要為這些煙負責。',2:'在醫院，二手菸也沒有放過孩子。',4:'連回到家，煙都先到了。'}[r.ch];
   return [a.join('；'),rem];
 }
 var GR=[['A','模範公民','您活在公民課本裡的那座城市。'],['B','盡力了','您很努力，這座城市沒有。'],['C','勉強過關','您撐過來了，肺不一定。'],['D','辛苦了','您和孩子都盡力了，可惜呼吸不是自願的。'],['E','今日不宜出門','今天，這座城市沒有為您的呼吸負責。']];
@@ -796,7 +815,7 @@ function end(reason){
    '<dt>檢舉／實際裁處</dt><dd>'+st.reports+' 次／0 次</dd>'+
    '<dt>繞路／因此走下人行道</dt><dd>'+st.detour+' 次／'+st.road+' 次</dd>'+
    '<dt>加速通過／吸到煙霧團</dt><dd>'+st.rush+' 次／'+st.hits+' 團</dd>'+
-   (st.revived?'<dt>提前結束後選擇繼續體驗</dt><dd>'+st.revived+' 次</dd>':'')+(st.guard?'<dt>找警衛反映</dt><dd>'+st.guard+' 次</dd>':'')+(st.wind?'<dt>閃躲時風向改變</dt><dd>'+st.wind+' 次（抽菸的人完全沒有移動）</dd>':'')+(st.lost?'<dt>找不到煙味源頭</dt><dd>'+st.lost+' 次</dd>':'')+(S.cab?'<dt>搭上有菸味的車</dt><dd>1 次</dd>':'')+
+   (st.revived?'<dt>提前結束後選擇繼續體驗</dt><dd>'+st.revived+' 次</dd>':'')+(st.guard?'<dt>找警衛反映</dt><dd>'+st.guard+' 次</dd>':'')+(st.wind?'<dt>閃躲時風向改變</dt><dd>'+st.wind+' 次（抽菸的人完全沒有移動）</dd>':'')+(st.lost?'<dt>找不到煙味源頭</dt><dd>'+st.lost+' 次</dd>':'')+(S.cab?'<dt>搭上有菸味的車</dt><dd>1 次</dd>':'')+(S.lift?'<dt>擠進有菸味的電梯</dt><dd>1 次</dd>':'')+(st.cloth?'<dt>衣服上的味道</dt><dd>'+st.cloth+'%</dd>':'')+
    '<dt>吸入口數（其中被動）</dt><dd>'+S.puffs+' 口（'+S.passive+' 口）</dd>'+
    '</dl>'+
    (S.ach?'<div class="ach">成就解鎖：今天有一個人聽進去。</div>':'')+
@@ -1023,6 +1042,7 @@ function signBoard(x,g){
   line(x-8,g-66,x+8,g-50,C.accent,3);
 }
 function drawWorld(kind,sc){
+  if(kind==='lift'||kind==='laundry'){ roomBg(kind); return; }
   var g=gy(), dk=!!(sc&&sc.dark), indoor=(kind==='stairs');
   if(indoor) stairBg(); else { skyBg(sc); city(sc?sc.seed:2,dk); }
   groundBg(indoor);
@@ -1121,12 +1141,53 @@ function tip(){
 }
 function updParts(dt){
   var scx=SC[Math.min(S.idx||0,SC.length-1)];
-  if((mode==='scene'||mode==='photo'||mode==='pass'||mode==='cover')&&!(mode==='scene'&&scx&&scx.kind==='find'&&!scx.revealed)){
+  if((mode==='scene'||mode==='photo'||mode==='pass'||mode==='cover')&&!(mode==='scene'&&scx&&scx.kind==='find'&&!scx.revealed)&&!(scx&&scx.nosmoker&&mode!=='pass'&&mode!=='cover')){
     M.acc=(M.acc||0)+dt*(mode==='pass'?60:38);
     while(M.acc>=1&&parts.length<160){M.acc--;var t=tip();parts.push({x:t.x,y:t.y,r:3,a:0.55,vx:-(18+Math.random()*26),vy:-(6+Math.random()*14)})}
   }
   parts.forEach(function(p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=dt*7;p.a-=dt*0.14});
   parts=parts.filter(function(p){return p.a>0&&p.x>-30});
+}
+function roomBg(kind){
+  var g=gy();
+  if(kind==='lift'){
+    ctx.fillStyle=lg(0,0,0,g,[[0,'#d6cfdd'],[1,'#a9a2b8']]); ctx.fillRect(0,0,W,g);
+    rect(0,0,W,H*0.09,'#8d889c'); rr(W*0.46,H*0.025,W*0.4,7,3,'#f7f1dc'); glow(W*0.66,H*0.05,W*0.3,'rgba(255,240,200,0.9)',0.25);
+    ctx.fillStyle=lg(0,0,0,g,[[0,'#e6dfd0'],[1,'#c9c2b4']]); ctx.fillRect(0,H*0.09,W*0.4,g-H*0.09);
+    rr(W*0.07,H*0.2,W*0.22,H*0.3,3,'#fbf8f0'); ctx.strokeStyle=C.accent; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(W*0.18,H*0.31,12,0,6.2832); ctx.stroke(); line(W*0.18-8,H*0.31-8,W*0.18+8,H*0.31+8,C.accent,3);
+    text('電梯全面禁菸',W*0.18,H*0.44,C.fg,'center',10);
+    rect(W*0.4,H*0.09,10,g-H*0.09,'#4b4658'); rect(W*0.4+10,H*0.09,W*0.05,g-H*0.09,'#b8b2c6'); rect(W*0.4+10,H*0.09,2,g-H*0.09,'#fff',0.35);
+    ctx.fillStyle=lg(0,0,W*0.4,0,[[0,'rgba(0,0,0,0)'],[1,'rgba(0,0,0,0)']]);
+    ctx.fillStyle=lg(W*0.5,0,W*0.95,0,[[0,'#bdb7c9'],[1,'#a39cb3']]); ctx.fillRect(W*0.5,H*0.09,W*0.5,g-H*0.09);
+    var mx=W*0.56,my=H*0.17,mw=W*0.34,mh=g-H*0.17-H*0.2;
+    rect(mx-4,my-4,mw+8,mh+8,'#6b6478'); ctx.fillStyle=lg(mx,my,mx+mw,my+mh,[[0,'#eef2f8'],[1,'#a9b6c9']]); ctx.fillRect(mx,my,mw,mh);
+    ctx.save(); ctx.globalAlpha=0.28; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.moveTo(mx+mw*0.15,my); ctx.lineTo(mx+mw*0.38,my); ctx.lineTo(mx+mw*0.18,my+mh); ctx.lineTo(mx-2,my+mh); ctx.closePath(); ctx.fill(); ctx.restore();
+    line(W*0.46,g-48,W*0.96,g-48,'#d0ccdb',4); line(W*0.46,g-49.5,W*0.96,g-49.5,'#fff',1,0.5);
+    rr(W*0.93,H*0.3,W*0.05,H*0.28,3,'#4b4658'); for(var bt=0;bt<5;bt++) circ(W*0.955,H*0.34+bt*H*0.05,2.6,bt===2?'#ffcf70':'#8d889c');
+    rr(W*0.66,H*0.1,W*0.12,H*0.045,3,'#2b2530'); text('12',W*0.72,H*0.1+H*0.034,'#ff9a5a','center',11);
+  } else {
+    ctx.fillStyle=lg(0,0,0,g,[[0,'#ddd6e6'],[1,'#c7bfd4']]); ctx.fillRect(0,0,W,g);
+    var wx0=W*0.66,wy0=H*0.14,ww=W*0.3,wh=H*0.36;
+    rect(wx0-5,wy0-5,ww+10,wh+10,'#f4f1f7'); ctx.fillStyle=lg(0,wy0,0,wy0+wh,[[0,'#2b2748'],[1,'#5a4f78']]); ctx.fillRect(wx0,wy0,ww,wh);
+    circ(wx0+ww*0.8,wy0+wh*0.22,6,'#f3ecd8',0.9);
+    for(var bi=0;bi<4;bi++){ var bh=wh*(0.35+((bi*37)%30)/100), bx=wx0+bi*ww/4; rect(bx,wy0+wh-bh,ww/4-3,bh,'#3b3558'); for(var wi=0;wi<4;wi++) if((bi+wi)%2) rect(bx+5,wy0+wh-bh+6+wi*9,5,5,'#f2d27a',0.9); }
+    rect(wx0+ww/2-1,wy0,2,wh,'#f4f1f7'); rect(wx0,wy0+wh*0.5,ww,2,'#f4f1f7');
+    var mx2=W*0.42,mw2=W*0.18;
+    rr(mx2,g-72,mw2,72,6,'#f4f1f7'); rect(mx2,g-72,mw2,14,'#dcd6e6'); circ(mx2+8,g-65,2.5,'#c4503a'); circ(mx2+16,g-65,2.5,'#8d889c');
+    var cx2=mx2+mw2/2, cy2=g-34; circ(cx2,cy2,22,'#8d889c'); circ(cx2,cy2,17,'#4b4a78'); ctx.fillStyle='#8fa8c4'; ctx.beginPath(); ctx.arc(cx2,cy2,15,0.3,3.2); ctx.fill(); ctx.fillStyle='#d9a05b'; ctx.beginPath(); ctx.arc(cx2,cy2,12,3.4,5.9); ctx.fill();
+    var rx=W*0.7; line(rx,g-4,rx,g-52,'#8a8498',3); line(rx+W*0.24,g-4,rx+W*0.24,g-52,'#8a8498',3); line(rx,g-52,rx+W*0.24,g-52,'#8a8498',3);
+    [['#6fa3a0',0.04],['#d9a05b',0.1],['#a58fb5',0.16],['#86a58f',0.21]].forEach(function(c){ var hx0=rx+W*c[1]; line(hx0,g-52,hx0,g-47,'#8a8498',1.5); rr(hx0-8,g-47,16,22,4,c[0]); });
+  }
+  groundBg(true);
+  if(kind==='lift'){
+    rect(W*0.4,gy(),W*0.6,H-gy(),'#6b6478',0.3);
+    var ax=W*0.64, ay=gy()+10; ctx.globalAlpha=0.7; ctx.fillStyle='#8d889c'; ctx.beginPath(); ctx.ellipse(ax,ay,13,4,0,0,6.2832); ctx.fill(); ctx.globalAlpha=1; rr(ax+3,ay-4,10,3,1,'#f4f1f7'); rect(ax+11,ay-4,2.5,3,'#d9a441');
+    for(var k=0;k<4;k++) puff(W*0.55+k*W*0.1+Math.sin(frame*0.02+k)*8,g-26-k*7-((frame*0.3+k*22)%26),14,0.17);
+  } else {
+    var bx2=W*0.33, by2=gy(); rr(bx2-18,by2-26,36,26,6,'#b58a5a'); for(var ls=0;ls<3;ls++) line(bx2-16,by2-20+ls*7,bx2+16,by2-20+ls*7,'#8a6a4a',1.2,0.7);
+    circ(bx2-8,by2-28,9,'#6fa3a0'); circ(bx2+6,by2-30,10,'#d9a05b'); circ(bx2,by2-35,8,'#a58fb5');
+    for(var q=0;q<3;q++) puff(bx2-4+q*8+Math.sin(frame*0.03+q)*5,by2-44-q*8-((frame*0.35+q*16)%22),9,0.2);
+  }
 }
 function curSc(){ return (mode==='pass'&&S.passSc)?S.passSc:SC[Math.min(S.idx||0,SC.length-1)]; }
 function hospitalFacade(base,topY){
@@ -1486,11 +1547,11 @@ function loop(ts){
     else if(sc.kind==='clinic'){ drawClinic(); drawParts(); }
     else{
       drawWorld(sc.kind,sc);
-      stroller(W*0.2,gy(),false);
+      if(sc.kind==='laundry') figure(W*0.2,gy(),{look:PARENT,dir:1,arm:'push'}); else stroller(W*0.2,gy(),false);
       if(sc.kind==='find'&&sc.elev&&sc.revealed){
         var wg=winGeom(sc.elev); ctx.save(); ctx.beginPath(); ctx.rect(smokerX()-20,wg.wy,40,wg.wh); ctx.clip();
         smoker(smokerX(),wg.fy,'',sc.look||sc.seed,false); ctx.restore();
-      } else if(!(sc.kind==='find'&&!sc.revealed)) smoker(smokerX(),gy()-(sc.elev||0),sc.who,sc.look||sc.seed,sc.kind==='crossing');
+      } else if(!(sc.kind==='find'&&!sc.revealed)&&!sc.nosmoker) smoker(smokerX(),gy()-(sc.elev||0),sc.who,sc.look||sc.seed,sc.kind==='crossing');
       if(sc.kind==='stairs') ivPole(smokerX(),gy());
       if(sc.kind==='balcony') balconyRail(sc);
       drawParts();
