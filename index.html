@@ -1,8 +1,4 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>無菸城市：推著娃娃車出門的一天</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@600&display=swap">
@@ -65,6 +61,12 @@ canvas{display:block;width:100%;height:clamp(200px,52vw,240px);touch-action:none
 .risk .lab{font-family:var(--serif);font-size:15px}
 .risk .num{font-family:var(--serif);font-size:44px;line-height:1.2;color:var(--accent);font-variant-numeric:tabular-nums}
 .risk small{display:block;color:var(--muted);font-size:11.5px}
+.grade{display:flex;align-items:center;gap:14px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0}
+.grade .g{font-family:var(--serif);font-size:56px;line-height:1;color:var(--accent);min-width:56px;text-align:center}
+.grade .n{font-size:13.5px;color:var(--muted)} .grade .n b{display:block;font-family:var(--serif);font-size:16px;color:var(--fg);font-weight:600}
+.cc{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel);display:flex;flex-direction:column;gap:2px}
+.cc .h{display:flex;justify-content:space-between;font-size:13px;letter-spacing:.06em;color:var(--muted)} .cc .h b{color:var(--fg);font-family:var(--serif);font-weight:600}
+.cc .l{font-size:13.5px} .cc .r{font-size:13px;color:var(--muted);font-family:var(--serif)}
 .stats{margin:0;display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:14px}
 .stats dt{color:var(--muted)} .stats dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
 .ach{font-size:13.5px;border:1px dashed var(--smoke);border-radius:8px;padding:8px 10px;color:var(--good)}
@@ -121,6 +123,7 @@ var S={};
 function reset(){
   S.air=100;S.pat=100;S.time=100;S.puffs=0;S.passive=0;S.idx=0;S.passEv=0;S.ach=false;S.cab=0;S.ch3=false;S.smell=0;S.promise=0;S.edu=0;S.refer=0;S.referSent=0;S.scaleN=0;S.scaleQ=0;S.probed=false;S.line='';S.visit=1;
   S.st={detour:0,road:0,rush:0,hits:0,tries:0,ok:0,photos:0,caught:0,reports:0};
+  S.log=[];S.snapped=0;S.base=null;
   hud();
 }
 function hud(){
@@ -276,6 +279,7 @@ function start(ch){
 function enterScene(i){
   S.idx=i; mode='scene'; M={}; parts.length=0;
   var sc=SC[i];
+  if(!S.base||i===0||sc.ch!==SC[i-1].ch) S.base=baseSnap();
   S.ch3=(sc.ch===3); hud();
   auAmb(sc.ch); if(sc.kind!=='clinic'&&sc.kind!=='ride'&&sc.kind!=='find') sfx('lighter');
   if(sc.kind==='clinic'){
@@ -311,7 +315,7 @@ function enterScene(i){
 function next(){
   var i=S.idx+1;
   if(i>=SC.length){ end('done'); return; }
-  if(SC[i].ch!==SC[S.idx].ch){ chapterBreak(i); return; }
+  if(SC[i].ch!==SC[S.idx].ch){ if(SC===ALL) snapChap(SC[S.idx].ch); chapterBreak(i); return; }
   var fi=SC.length>=5?3:1;
   var force=(i===fi&&S.passEv===0);
   if((SC[i].ch<3||SC[i].ch===4)&&SC[i].kind!=='ride'&&(force||(i>=1&&Math.random()<0.4))){ S.passEv++; startPass(function(){enterScene(i)}); }
@@ -636,9 +640,81 @@ function holdUI(){
   choices.appendChild(b);
 }
 
+/* ---------- 合併結算（完整一輪） ---------- */
+function baseSnap(){ var o={},k; for(k in S.st) o[k]=S.st[k]; return {st:o,puffs:S.puffs,passive:S.passive}; }
+function snapChap(ch){
+  var b=S.base||baseSnap(), d={}, k;
+  for(k in S.st) d[k]=(S.st[k]||0)-(b.st[k]||0);
+  var r={ch:ch,d:d,puffs:S.puffs-b.puffs,passive:S.passive-b.passive,
+    score:ch===3?Math.round(100-S.smell):Math.round(S.air),smell:Math.round(S.smell),
+    promise:S.promise,edu:S.edu,refer:S.refer,referSent:S.referSent,scaleN:S.scaleN,avg:S.scaleN?Math.round(S.scaleQ/S.scaleN*100):0,
+    visit:S.visit,cab:S.cab};
+  S.log.push(r); S.snapped=ch;
+}
+var CHN=['','章節一 · 逛街出門','章節二 · 醫院回診','章節三 · 診間篇','章節四 · 下班回家'];
+function chapLine(r){
+  var d=r.d, a=[];
+  if(r.ch===3){
+    a.push('戒菸承諾 '+r.promise+' 次，實際戒菸 0 次');
+    a.push('衛教 '+r.edu+' 次，成功轉介 '+r.refer+' 次');
+    if(r.scaleN) a.push('牙根整平 '+r.scaleN+' 次，平均清除率 '+r.avg+'%');
+    return [a.join('；'),'身上的味道 '+r.smell+'%，今晚會跟您一起回家。'];
+  }
+  a.push('被動吸入 '+r.passive+' 口，共 '+r.puffs+' 口');
+  if(d.tries) a.push('勸阻成功 '+d.ok+'／'+d.tries);
+  if(d.photos||d.reports) a.push('拍照 '+d.photos+' 次，檢舉 '+d.reports+' 次，實際裁處 0 次');
+  if(d.guard) a.push('找警衛 '+d.guard+' 次');
+  if(d.lost) a.push('找不到煙味源頭 '+d.lost+' 次');
+  if(d.wind) a.push('風向改變 '+d.wind+' 次');
+  var rem={1:'街上沒有人需要為這些煙負責。',2:'在醫院，二手菸也沒有放過孩子。',4:'連回到家門口，煙都先到了。'}[r.ch];
+  return [a.join('；'),rem];
+}
+function gradeOf(sc){
+  if(sc>=85) return ['A','模範公民','您活在公民課本裡的那座城市。'];
+  if(sc>=70) return ['B','盡力了','您很努力，這座城市沒有。'];
+  if(sc>=55) return ['C','勉強過關','您撐過來了，肺不一定。'];
+  if(sc>=40) return ['D','辛苦了','您和孩子都盡力了，可惜呼吸不是自願的。'];
+  return ['E','今日不宜出門','今天，這座城市沒有為您的呼吸負責。'];
+}
+function summary(reason){
+  mode='scene';M={};
+  var L=S.log, tot={puffs:0,passive:0,photos:0,caught:0,reports:0,revived:0,ok:0,tries:0},sum=0;
+  L.forEach(function(r){ tot.puffs+=r.puffs; tot.passive+=r.passive; tot.photos+=r.d.photos; tot.caught+=r.d.caught; tot.reports+=r.d.reports; tot.revived+=(r.d.revived||0); tot.ok+=r.d.ok; tot.tries+=r.d.tries; sum+=r.score; });
+  var score=Math.max(0,Math.min(100,Math.round(sum/L.length-tot.caught*3-tot.revived*8)));
+  var g=gradeOf(score), full=(reason==='done');
+  var T=full?['今日完整行程結束','從逛街、回診、上班到回家，您走完了一整天。']:
+    {road:['行程提早結束','為了躲煙，您走下了人行道。'],air:['行程提早結束','寶寶咳得停不下來，只好打道回府。'],pat:['行程提早結束','耐心用完了，今天只能到這裡。'],time:['行程提早結束','時間用完了。'],smell:['行程提早結束','味道太濃了，今天只能到這裡。']}[reason]||['行程結束',''];
+  var cards=L.map(function(r){ var t=chapLine(r); return '<div class="cc"><div class="h"><b>'+CHN[r.ch]+'</b><span>'+r.score+' 分</span></div><div class="l">'+t[0]+'</div><div class="r">'+t[1]+'</div></div>'; }).join('');
+  var txt='無菸城市｜今日文明指數 '+g[0]+'（'+score+'）：'+g[1]+'。'+g[2]+' https://orz629.github.io/smoke-free';
+  $('#play').hidden=true; var e=$('#end'); e.hidden=false;
+  e.innerHTML=
+   '<h2>'+T[0]+'</h2><p class="sub">'+T[1]+'</p>'+
+   '<div class="grade"><div class="g">'+g[0]+'</div><div class="n"><b>今日文明指數 '+score+'：'+g[1]+'</b>'+g[2]+'<br><small>本指數為遊戲虛構。'+(full?'':'僅計算已經玩過的章節。')+'</small></div></div>'+
+   cards+
+   '<dl class="stats">'+
+   '<dt>吸入口數（其中被動）</dt><dd>'+tot.puffs+' 口（'+tot.passive+' 口）</dd>'+
+   '<dt>勸阻成功／嘗試</dt><dd>'+tot.ok+' 次／'+tot.tries+' 次</dd>'+
+   '<dt>拍照蒐證／被發現</dt><dd>'+tot.photos+' 次／'+tot.caught+' 次</dd>'+
+   '<dt>檢舉／實際裁處</dt><dd>'+tot.reports+' 次／0 次</dd>'+
+   (tot.revived?'<dt>提前結束後選擇繼續體驗</dt><dd>'+tot.revived+' 次</dd>':'')+
+   '</dl>'+
+   (S.ach?'<div class="ach">成就解鎖：今天有一個人聽進去。</div>':'')+
+   '<div class="real"><p>現實：國民健康署指出，國內平均每年近 3,000 人死於二手菸害。</p>'+
+   '<p>在公告禁菸的場所遇到有人吸菸，可向當地衛生局檢舉，並附上照片或影片；蒐證請保持距離、不要正面衝突。</p>'+
+   '<p>吸菸會讓牙周治療後的癒合較差，也較容易復發。國健署免費戒菸專線 0800-636363（戒菸撥 63）。</p></div>'+
+   '<button class="choice" id="cp"><b>複製成績</b><span>貼給朋友看看</span></button>'+
+   '<button class="choice one big" id="again"><b>回到選單</b></button>';
+  $('#again').onclick=menu;
+  $('#cp').onclick=function(){
+    var b=$('#cp'), ok=function(){ b.querySelector('b').textContent='已複製'; };
+    try{ navigator.clipboard.writeText(txt).then(ok,function(){ b.querySelector('span').textContent=txt; }); }catch(x){ b.querySelector('span').textContent=txt; }
+  };
+}
+
 /* ---------- 結算 ---------- */
 function end(reason){
   sfx('end');
+  if(SC===ALL){ if(S.snapped!==SC[S.idx].ch) snapChap(SC[S.idx].ch); return summary(reason); }
   if(S.ch3) return end3(reason);
   mode='scene';M={};
   var T={
