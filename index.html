@@ -243,6 +243,7 @@ function auAmb(ch){
   if(ch===3) AU.tm.push(setInterval(function(){ if(AU.on) nz(0.025,0.04,'highpass',4500,1) },1000));
 }
 function auSmoke(v){ if(AU.lp&&AU.c) AU.lp.frequency.setTargetAtTime(220+Math.max(0,Math.min(100,v))*12,AU.c.currentTime,0.4); }
+['pointerup','click','touchend'].forEach(function(ev){ window.addEventListener(ev,function(){ auInit(); },true); });
 window.addEventListener('pointerdown',function(e){
   auInit();
   var t=e.target; if(t&&t.closest&&t.closest('button')) sfx('click');
