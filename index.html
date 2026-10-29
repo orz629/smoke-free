@@ -491,7 +491,7 @@ function coverUI(){
   tg.innerHTML='<b>情節設定 '+(COVEROPEN?'▲':'▼')+'</b><span>章節：'+CHN[CFGCH]+'　社會風氣：'+(IDEAL?'公民課本版':'現實版')+(COVEROPEN?'':'（點此修改）')+'</span>';
   tg.onclick=function(){ COVEROPEN=!COVEROPEN; coverUI(); };
   choices.appendChild(tg);
-  coverFoot=function(){var f=document.createElement('div');f.style.cssText='grid-column:1 / -1;text-align:center;font-size:11px;line-height:1.6;color:var(--muted);margin-top:8px';f.innerHTML='© 2026 陳穎吾　CC BY-NC-ND 4.0<br>商業授權或改作，請聯絡 github.com/orz629';choices.appendChild(f)};
+  coverFoot=function(){var f=document.createElement('div');f.style.cssText='grid-column:1 / -1;text-align:center;font-size:11px;line-height:1.6;color:var(--muted);margin-top:8px';f.innerHTML='© 2026 陳穎吾　CC BY-NC-ND 4.0<br>商業授權、改作或意見回報，請寄 chygwu@gmail.com';choices.appendChild(f)};
   if(!COVEROPEN){ coverFoot(); return; }
   function grp(t){var d=document.createElement('div');d.style.cssText='grid-column:1 / -1;font-size:11px;letter-spacing:.08em;color:var(--muted);margin-top:4px';d.textContent=t;choices.appendChild(d)}
   function opt(t,s,on,f){
