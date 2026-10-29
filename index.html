@@ -1039,8 +1039,8 @@ function drawClinic(){
   rr(cx-32,g-28,64,14,6,'#7d8aa3');
   ctx.fillStyle='#7d8aa3';ctx.beginPath();ctx.moveTo(cx+20,g-28);ctx.lineTo(cx+36,g-30);ctx.lineTo(cx+62,g-76);ctx.lineTo(cx+46,g-80);ctx.closePath();ctx.fill();
   var P={shirt:'#d9a05b',pants:'#4a4358',hair:LOOKS[3].hair,skin:LOOKS[3].skin};
-  line(cx-24,g-33,cx+16,g-34,P.pants,9);
   line(cx+16,g-37,cx+42,g-80,P.shirt,13);
+  line(cx-24,g-33,cx+18,g-35,P.pants,9);
   circ(cx+47,g-91,10,P.skin);
   ctx.fillStyle=P.hair;ctx.beginPath();ctx.arc(cx+47,g-91,10.5,Math.PI*0.95,Math.PI*1.85);ctx.closePath();ctx.fill();
   circ(cx+42,g-91,1.2,'#2b2530');
