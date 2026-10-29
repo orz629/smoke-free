@@ -1231,7 +1231,7 @@ function startMode(m,done){
   if(m==='dodge') M={t:0,dur:8,lane:1,clouds:[],spawn:0.4,hits:0,flash:0,wind:0,nextWind:Math.random()<0.5?-1:1,wt:2.4,shifts:0,done:done};
   if(m==='photo') M={t:0,burn:8,risk:0,near:true,msg:'',msgT:0,fx:W*0.5,done:done};
   if(m==='pass') M={t:0,dur:4.2,hold:false,air:0,pat:0,wx:W+30,done:done};
-  if(m==='scale'){ var bs=[]; for(var i=0;i<6;i++) bs.push({y:H*(0.3+i*0.085)+Math.random()*4,side:i%2,done:false}); M={t:0,dur:12,bumps:bs,miss:0,y:H*0.2,flash:0,ok:true,side:0,done:done}; }
+  if(m==='scale'){ var bs=[]; for(var i=0;i<6;i++) bs.push({y:H*(0.34+Math.floor(i/2)*0.1)+Math.random()*6,side:i%2,done:false}); M={t:0,dur:12,bumps:bs,miss:0,y:H*0.2,flash:0,ok:true,side:0,done:done}; }
   if(m==='ride') M={t:0,dur:7,open:false,f:S.cab?1:0.4,air:0,pat:0,haze:S.cab?0.8:0.3,done:done};
 }
 function findSpots(){
@@ -1449,18 +1449,59 @@ function updScale(dt){
 }
 function drawScale(){
   ctx.fillStyle=lg(0,0,0,H,[[0,mix(C.sky,'#d9b8c4',0.5)],[1,mix(C.sky,'#f4e6ea',0.5)]]); ctx.fillRect(0,0,W,H);
-  var cx=W*0.5;
-  function wAt(y){var t=Math.max(0,Math.min(1,(y-H*0.28)/(H*0.64)));return W*0.2*(1-t)+W*0.05*t}
-  ctx.fillStyle='#d99aa0';ctx.globalAlpha=0.6;
-  ctx.beginPath();ctx.moveTo(0,H*0.3);ctx.lineTo(cx-wAt(H*0.3)/2,H*0.3);ctx.lineTo(cx-wAt(H*0.92)/2,H*0.92);ctx.lineTo(cx-wAt(H*0.92)/2,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.moveTo(W,H*0.3);ctx.lineTo(cx+wAt(H*0.3)/2,H*0.3);ctx.lineTo(cx+wAt(H*0.92)/2,H*0.92);ctx.lineTo(cx+wAt(H*0.92)/2,H);ctx.lineTo(W,H);ctx.closePath();ctx.fill();
-  ctx.globalAlpha=1;
-  rr(cx-W*0.12,H*0.06,W*0.24,H*0.26,12,'#f4f1f7');
-  ctx.fillStyle='#efe9db';ctx.beginPath();ctx.moveTo(cx-wAt(H*0.28)/2,H*0.28);ctx.lineTo(cx+wAt(H*0.28)/2,H*0.28);ctx.lineTo(cx+wAt(H*0.94)/2,H*0.94);ctx.lineTo(cx-wAt(H*0.94)/2,H*0.94);ctx.closePath();ctx.fill();
+  var cx=W*0.5, TOP=H*0.15, NECK=H*0.32, FUR=H*0.47, APEX=H*0.93;
+  function rootEdge(side,y){ /* side 0 左 / 1 右：回傳牙齒外緣 x */
+    var sg=side?1:-1, t=Math.max(0,Math.min(1,(y-NECK)/(APEX-NECK)));
+    var c=W*0.075+W*0.1*t, w=W*0.075*(1-0.72*t)+W*0.014, root=cx+sg*(c+w);
+    var crown=cx+sg*W*0.2, k=Math.max(0,Math.min(1,(y-H*0.24)/(H*0.08)));
+    return crown*(1-k)+root*k;
+  }
+  function innerEdge(side,y){ var sg=side?1:-1, t=Math.max(0,Math.min(1,(y-NECK)/(APEX-NECK))); return cx+sg*(W*0.075+W*0.1*t-(W*0.075*(1-0.72*t)+W*0.014)); }
+  function hash(i){ var v=Math.sin(i*127.1)*43758.5453; return v-Math.floor(v); }
+  /* 底：牙齦與骨頭（X 光切面感） */
+  ctx.fillStyle=lg(0,0,0,H,[[0,'#e9c2c6'],[0.3,'#dfa7ae'],[1,'#c98f98']]); ctx.fillRect(0,0,W,H);
+  var crestL=H*0.7, crestR=H*0.76;
+  function crest(side,x){ /* 骨頂：貼牙處吸收最深，離牙越遠越高，邊緣呈鋸齒狀 */
+    var d=Math.abs(x-cx)/(W*0.5), base=side?crestR:crestL, hi=H*0.5;
+    return base*(1-d*d)+hi*d*d+(hash(Math.floor(x/6)+side*50)-0.5)*9;
+  }
+  [0,1].forEach(function(sd){
+    ctx.beginPath(); var x0=sd?W:0, x1=cx+(sd?1:-1)*W*0.2, st=sd?-6:6, x;
+    ctx.moveTo(x0,H); ctx.lineTo(x0,crest(sd,x0));
+    for(x=x0;sd?x>x1:x<x1;x+=st) ctx.lineTo(x,crest(sd,x));
+    ctx.lineTo(x1,H); ctx.closePath();
+    ctx.fillStyle=lg(0,H*0.5,0,H,[[0,'#d9c7a6'],[1,'#b9a584']]); ctx.fill();
+    ctx.strokeStyle='#8a7656'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.save(); ctx.clip(); for(var q=0;q<90;q++){ var px=(sd?W*0.5:0)+hash(q+sd*200)*W*0.5, py=H*0.5+hash(q*3+7+sd)*H*0.5; ctx.fillStyle='rgba(120,96,64,'+(0.12+hash(q)*0.18)+')'; ctx.beginPath(); ctx.ellipse(px,py,2+hash(q+9)*5,1.5+hash(q+4)*3,hash(q)*3,0,6.2832); ctx.fill(); } ctx.restore();
+  });
+  /* 牙周囊袋：貼牙面的暗紅肉芽組織 */
+  [0,1].forEach(function(sd){ ctx.beginPath(); for(var y=NECK;y<=(sd?crestR:crestL);y+=6){ var xx=rootEdge(sd,y)+(sd?5:-5); if(y===NECK) ctx.moveTo(xx,y); else ctx.lineTo(xx,y); } ctx.lineTo(rootEdge(sd,sd?crestR:crestL)+(sd?-1:1),sd?crestR:crestL); for(var y2=(sd?crestR:crestL);y2>=NECK;y2-=6) ctx.lineTo(rootEdge(sd,y2),y2); ctx.closePath(); ctx.fillStyle='rgba(140,50,70,0.55)'; ctx.fill(); });
+  /* 根岔病變：兩根之間的骨頭被吃掉，剩一個暗洞 */
+  ctx.beginPath(); ctx.moveTo(innerEdge(0,FUR),FUR); ctx.lineTo(innerEdge(1,FUR),FUR);
+  for(var fy=FUR;fy<=H*0.84;fy+=6) ctx.lineTo(innerEdge(1,fy)+(hash(fy)-0.5)*6,fy);
+  for(var fy2=H*0.84;fy2>=FUR;fy2-=6) ctx.lineTo(innerEdge(0,fy2)+(hash(fy2+3)-0.5)*6,fy2);
+  ctx.closePath(); ctx.fillStyle='#5b4651'; ctx.fill();
+  /* 牙齒：牙冠＋根幹＋雙根 */
+  var tg=lg(cx-W*0.2,0,cx+W*0.2,0,[[0,'#e4dcc8'],[0.5,'#f7f2e4'],[1,'#e1d8c2']]); ctx.fillStyle=tg; ctx.strokeStyle='#b9ad92'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(cx-W*0.2,NECK);
+  ctx.lineTo(cx-W*0.2,H*0.215); ctx.quadraticCurveTo(cx-W*0.2,TOP+8,cx-W*0.14,TOP+6);
+  ctx.quadraticCurveTo(cx-W*0.1,TOP+22,cx-W*0.05,TOP+10); ctx.quadraticCurveTo(cx,TOP-4,cx+W*0.05,TOP+10);
+  ctx.quadraticCurveTo(cx+W*0.1,TOP+22,cx+W*0.14,TOP+6); ctx.quadraticCurveTo(cx+W*0.2,TOP+8,cx+W*0.2,H*0.215);
+  ctx.lineTo(cx+W*0.2,NECK); ctx.lineTo(cx+W*0.2,H*0.3); ctx.closePath(); ctx.fill(); ctx.stroke();
+  [0,1].forEach(function(sd){ var sg=sd?1:-1; ctx.beginPath(); ctx.moveTo(rootEdge(sd,H*0.28),H*0.28);
+    for(var y=H*0.28;y<=APEX;y+=6) ctx.lineTo(rootEdge(sd,y),y);
+    ctx.lineTo(cx+sg*(W*0.17),APEX+6);
+    for(var y2=APEX;y2>=FUR;y2-=6) ctx.lineTo(innerEdge(sd,y2),y2);
+    ctx.lineTo(cx,FUR-4); ctx.lineTo(cx,H*0.28); ctx.closePath(); ctx.fillStyle=tg; ctx.fill(); ctx.stroke(); });
+  rect(cx-W*0.2,H*0.3,W*0.4,5,'#d99aa0',0.55);
+  rr(cx-W*0.2+4,NECK-H*0.045,W*0.4-8,H*0.045,6,'#d6cdb4',0.45);
+  /* 牙結石：貼在牙根外側 */
   var lc=[0,0];
-  M.bumps.forEach(function(b){ if(b.done) return; lc[b.side]++; var x=b.side?cx+wAt(b.y)/2+3:cx-wAt(b.y)/2-3; circ(x,b.y,6,'#8a6a4a'); });
-  var sg=M.side?1:-1, tx=cx+sg*(wAt(M.y)/2+2);
+  M.bumps.forEach(function(b){ if(b.done) return; lc[b.side]++; var x=rootEdge(b.side,b.y)+(b.side?3:-3); ctx.fillStyle='#7a5a3c'; ctx.beginPath(); ctx.ellipse(x,b.y,8,6,0,0,6.2832); ctx.fill(); circ(x+(b.side?2:-2),b.y-1,3,'#9a7650'); });
+  var sg=M.side?1:-1, tx=rootEdge(M.side,M.y)+sg*2;
   line(tx+sg*70,M.y-36,tx,M.y,'#9a93a8',4); circ(tx,M.y,3,C.panel);
+  text('骨吸收',M.side?W-8:8,H*0.56,'#6a5338',M.side?'right':'left',11);
+  text('根岔病變',cx,H*0.66,'#e8dfe3','center',11);
   rect(12,10,W-24,6,C.line,0.9); rect(12,10,(W-24)*Math.min(1,M.t/M.dur),6,C.smoke);
   text('左側剩 '+lc[0]+'　右側剩 '+lc[1],12,H-12,C.muted,'left',11);
   text(M.side?'目前：右側':'目前：左側',W/2,H*0.05+14,C.fg,'center',11);
