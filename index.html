@@ -450,7 +450,7 @@ function chapterBreak(i){
     setChoices([{t:'走進診間',one:true,f:function(){enterScene(i)}}]);
     return;
   }
-  say('<div class="who">章節二 · 看診日</div><p>孩子今天要回診。從診間到回家，又是一趟推著娃娃車的路。</p><p class="gov">這一章的地點是醫院，原本該是最安全的地方。</p>');
+  say('<div class="who">章節二 · 醫院回診</div><p>孩子今天要回診。從診間到回家，又是一趟推著娃娃車的路。</p><p class="gov">這一章的地點是醫院，原本該是最安全的地方。</p>');
   setChoices([{t:'前往醫院',one:true,f:function(){enterScene(i)}}]);
 }
 function startRide(){
@@ -500,7 +500,7 @@ function coverUI(){
     b.onclick=function(){ f(); coverUI(); }; choices.appendChild(b);
   }
   grp('章節');
-  [['完整一輪','四個章節接在一起',0],['章節一','逛街出門',1],['章節二','看診日',2],['章節三','診間篇',3],['章節四','下班回家',4]].forEach(function(c){ opt(c[0],c[1],CFGCH===c[2],function(){CFGCH=c[2]}); });
+  [['完整一輪','四個章節接在一起',0],['章節一','逛街出門',1],['章節二','醫院回診',2],['章節三','診間篇',3],['章節四','下班回家',4]].forEach(function(c){ opt(c[0],c[1],CFGCH===c[2],function(){CFGCH=c[2]}); });
   grp('社會風氣');
   opt('公民課本版','人人有公德心：勸阻比較容易成功，煙霧傷害較小',IDEAL,function(){IDEAL=true});
   opt('現實版','維持原本的樣子',!IDEAL,function(){IDEAL=false});
