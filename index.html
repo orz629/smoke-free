@@ -831,7 +831,7 @@ function drawWorld(kind,sc){
 function tip(){
   if(mode==='pass') return {x:M.wx-17,y:gy()-48};
   var sc=SC[Math.min(S.idx||0,SC.length-1)];
-  if(sc.kind==='clinic') return {x:W*0.62+46,y:gy()-78};
+  if(sc.kind==='clinic') return {x:W*0.62+42,y:gy()-86};
   return {x:smokerX()-17,y:gy()-48-(sc.kind==='crossing'?7:0)-(sc.elev||0)};
 }
 function updParts(dt){
@@ -1038,12 +1038,12 @@ function drawClinic(){
   rect(cx-26,g-4,52,4,C.muted); line(cx-6,g-14,cx-6,g-4,C.muted,6);
   rr(cx-32,g-28,64,14,6,'#7d8aa3');
   ctx.fillStyle='#7d8aa3';ctx.beginPath();ctx.moveTo(cx+20,g-28);ctx.lineTo(cx+36,g-30);ctx.lineTo(cx+62,g-76);ctx.lineTo(cx+46,g-80);ctx.closePath();ctx.fill();
-  var P=LOOKS[3];
-  line(cx-24,g-38,cx+28,g-36,P.pants,9);
-  line(cx+30,g-38,cx+52,g-72,P.shirt,13);
-  circ(cx+57,g-83,10,P.skin);
-  ctx.fillStyle=P.hair;ctx.beginPath();ctx.arc(cx+57,g-83,10.5,Math.PI*0.95,Math.PI*1.85);ctx.closePath();ctx.fill();
-  circ(cx+52,g-83,1.2,'#2b2530');
+  var P={shirt:'#d9a05b',pants:'#4a4358',hair:LOOKS[3].hair,skin:LOOKS[3].skin};
+  line(cx-24,g-44,cx+22,g-45,P.pants,9);
+  line(cx+20,g-47,cx+42,g-80,P.shirt,13);
+  circ(cx+47,g-91,10,P.skin);
+  ctx.fillStyle=P.hair;ctx.beginPath();ctx.arc(cx+47,g-91,10.5,Math.PI*0.95,Math.PI*1.85);ctx.closePath();ctx.fill();
+  circ(cx+42,g-91,1.2,'#2b2530');
   var dx=W*0.28;
   figure(dx,g,{look:DOC,dir:1,arm:'push'});
   rr(dx+1,g-51,11,6,3,'#e9eef2');
