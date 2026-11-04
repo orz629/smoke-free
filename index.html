@@ -62,7 +62,7 @@ canvas{display:block;width:100%;height:clamp(200px,52vw,240px);touch-action:none
 @media (prefers-reduced-motion:reduce){.startbtn,.startbtn::before{animation:none}}
 .choice span{display:block;font-size:12px;color:var(--muted);line-height:1.45;margin-top:2px}
 .choice.one{grid-column:1 / -1}
-.chrow{grid-column:1 / -1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.chrow{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .choices.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .choice.sm{padding:8px 6px;text-align:center}
 .choice.sm b{font-size:14px}
@@ -95,7 +95,7 @@ canvas{display:block;width:100%;height:clamp(200px,52vw,240px);touch-action:none
 <body>
 
 <div class="app">
-  <div class="brand"><span class="t">無菸城市</span><span class="tag">v1.2 · 章節一至四 <button id="snd" class="choice" style="padding:1px 8px;font-size:11px;margin-left:6px" type="button">聲音：音樂＋音效</button></span></div>
+  <div class="brand"><span class="t">無菸城市</span><span class="tag">v1.2 · 章節一至三＋特別篇 <button id="snd" class="choice" style="padding:1px 8px;font-size:11px;margin-left:6px" type="button">聲音：音樂＋音效</button></span></div>
   <div class="hud">
     <div class="m"><label><em id="l-air" style="font-style:normal">寶寶空氣</em><span id="v-air">100</span></label><div class="bar"><i id="b-air"></i></div></div>
     <div class="m"><label>耐心<span id="v-pat">100</span></label><div class="bar"><i id="b-pat"></i></div></div>
@@ -139,7 +139,8 @@ var ALL=[
  {ch:4,kind:'lift',name:'社區電梯',who:'',nosmoker:true,text:'好不容易進了大廳，您推著娃娃車按下電梯。門一開，一股菸味撲面而來。鏡子旁貼著「電梯全面禁菸」，地板上有一小撮菸灰，廂內一個人也沒有。',accept:0,sign:false,tight:false,seed:29},
  {ch:4,kind:'laundry',name:'回到家',who:'',nosmoker:true,text:'終於回到家，孩子睡了。您把一天穿過的外套丟進洗衣籃，湊近一聞，那股味道還在。',accept:0,sign:false,tight:false,seed:31}
 ];
-var SC=ALL;
+var FULL=ALL.filter(function(s){return s.ch!==3});
+var SC=FULL;
 
 var S={};
 function reset(){
@@ -174,7 +175,7 @@ function checkEnd(){ if(S.ch3){ if(S.smell>=100) return 'smell'; if(S.pat<=0) re
 
 /* ---------- DOM helpers ---------- */
 var narr=$('#narr'), choices=$('#choices');
-function head(){ var sc=SC[S.idx]; return '<div class="who">'+(['','章節一','章節二','章節三','章節四'][sc.ch])+' · '+sc.name+'（'+(S.idx+1)+'／'+SC.length+'）</div>'; }
+function head(){ var sc=SC[S.idx]; return '<div class="who">'+(['','章節一','章節二','特別篇','章節三'][sc.ch])+' · '+sc.name+'（'+(S.idx+1)+'／'+SC.length+'）</div>'; }
 function say(h){ narr.innerHTML=h; }
 function setChoices(arr){
   choices.innerHTML='';choices.className='choices';
@@ -294,7 +295,7 @@ window.addEventListener('pointerdown',function(e){
 
 /* ---------- flow ---------- */
 function start(ch){
-  SC=(ch===1||ch===2||ch===3||ch===4)?ALL.filter(function(s){return s.ch===ch}):ALL;
+  SC=(ch===1||ch===2||ch===3||ch===4)?ALL.filter(function(s){return s.ch===ch}):FULL;
   reset(); $('#end').hidden=true; $('#play').hidden=false; $('.hud').style.display=''; parts.length=0;
   enterScene(0);
 }
@@ -353,7 +354,7 @@ function next(){
   if(SC[i].ch!==SC[S.idx].ch){ snapChap(SC[S.idx].ch); chapterBreak(i); return; }
   var fi=SC.length>=5?3:1;
   var force=(i===fi&&S.passEv===0);
-  if((SC[i].ch<3||SC[i].ch===4)&&SC[i].kind!=='ride'&&SC[i].kind!=='lift'&&SC[i].kind!=='laundry'&&(force||(i>=1&&Math.random()<0.4))){ S.passEv++; S.passSc=SC[i]; startPass(function(){enterScene(i)}); }
+  if((SC[i].ch<3||SC[i].ch===4)&&SC[i].kind!=='ride'&&SC[i].kind!=='lift'&&SC[i].kind!=='laundry'&&(force||(i>=1&&Math.random()<0.2))){ S.passEv++; S.passSc=SC[i]; startPass(function(){enterScene(i)}); }
   else enterScene(i);
 }
 
@@ -484,12 +485,12 @@ function chapterBreak(i){
   mode='scene'; M={};
   if(SC[i].ch===4){
     S.ch3=false; S.air=Math.max(S.air,80); S.pat=Math.max(S.pat,70); S.time=100; hud();
-    say('<div class="who">章節四 · 下班回家</div><p>下班了。您換下白袍，去學校接孩子，再一起回家。</p><p class="gov">這一章的地點是校園周邊、夜市、自家樓下的電梯，最後是家裡，都是您每天會經過的地方。</p>');
+    say('<div class="who">章節三 · 下班回家</div><p>孩子的回診結束了。您接著去學校接他，再一起回家。</p><p class="gov">這一章的地點是校園周邊、夜市、自家樓下的電梯，最後是家裡，都是您每天會經過的地方。</p>');
     setChoices([{t:'出發去接孩子',one:true,f:function(){enterScene(i)}}]);
     return;
   }
   if(SC[i].ch===3){
-    say('<div class="who">章節三 · 診間篇</div><p>換您上班了。今天的病人，是您看過很多次的那一種：牙周很嚴重，一直在抽菸，一直說要戒。</p><p class="gov">從這一章起，您是牙周病醫師。身上的味道，會跟著您回家。</p>');
+    say('<div class="who">特別篇 · 診間篇</div><p>換您上班了。今天的病人，是您看過很多次的那一種：牙周很嚴重，一直在抽菸，一直說要戒。</p><p class="gov">在這一篇，您是牙周病醫師。身上的味道，會跟著您回家。</p>');
     setChoices([{t:'走進診間',one:true,f:function(){enterScene(i)}}]);
     return;
   }
@@ -514,7 +515,7 @@ function rideUI(){
 var IDEAL=false, CFGCH=0;
 function menu(){
   auAmb(1);
-  SC=ALL; reset(); S.idx=0; mode='cover'; M={}; parts.length=0;
+  SC=FULL; reset(); S.idx=0; mode='cover'; M={}; parts.length=0;
   $('#end').hidden=true; $('#play').hidden=false; $('.hud').style.display='none';
   COVEROPEN=false;
   say('<div class="who" style="font-size:13px;letter-spacing:.06em;margin-bottom:10px">推著娃娃車出門的一天</div>'
@@ -526,7 +527,7 @@ function menu(){
 var COVEROPEN=false, coverFoot=null;
 function coverUI(){
   choices.innerHTML='';choices.className='choices';
-  var CHN=['完整一輪','章節一','章節二','章節三','章節四'];
+  var CHN=['完整一輪','章節一','章節二','特別篇：診間篇','章節三'];
   var go=document.createElement('button'); go.type='button'; go.className='choice one startbtn'; go.innerHTML='<b>遊戲開始</b><span>祝您今天出門順利</span>';
   go.onclick=function(){ start(CFGCH); }; choices.appendChild(go);
   var tg=document.createElement('button'); tg.type='button'; tg.className='choice one';
@@ -543,13 +544,14 @@ function coverUI(){
     b.onclick=function(){ f(); coverUI(); }; choices.appendChild(b);
   }
   grp('章節');
-  opt('完整一輪','四個章節接在一起',CFGCH===0,function(){CFGCH=0}); choices.lastChild.classList.add('one');
+  opt('完整一輪','三個章節接在一起',CFGCH===0,function(){CFGCH=0}); choices.lastChild.classList.add('one');
   var row=document.createElement('div'); row.className='chrow';
-  [['章節一','逛街出門',1],['章節二','醫院回診',2],['章節三','診間篇',3],['章節四','下班回家',4]].forEach(function(c){
+  [['章節一','逛街出門',1],['章節二','醫院回診',2],['章節三','下班回家',4]].forEach(function(c){
     var b=document.createElement('button'); b.type='button'; b.className='choice sm'; b.innerHTML='<b>'+c[0]+'</b><span>'+c[1]+'</span>'; b.setAttribute('aria-pressed',String(CFGCH===c[2]));
     b.onclick=function(){ CFGCH=c[2]; coverUI(); }; row.appendChild(b);
   });
   choices.appendChild(row);
+  var spb=document.createElement('button'); spb.type='button'; spb.className='choice one'; spb.setAttribute('aria-pressed',String(CFGCH===3)); spb.innerHTML='<b>特別篇：診間篇</b><span>換您當牙周病醫師，看看診間裡的二手菸</span>'; spb.onclick=function(){ CFGCH=3; coverUI(); }; choices.appendChild(spb);
   grp('社會風氣');
   opt('公民課本版','人人有公德心：勸阻比較容易成功，煙霧傷害較小',IDEAL,function(){IDEAL=true});
   opt('現實版','維持原本的樣子',!IDEAL,function(){IDEAL=false});
@@ -696,7 +698,7 @@ function snapChap(ch){
     visit:S.visit,cab:S.cab};
   S.log.push(r); S.snapped=ch;
 }
-var CHN=['','章節一 · 逛街出門','章節二 · 醫院回診','章節三 · 診間篇','章節四 · 下班回家'];
+var CHN=['','章節一 · 逛街出門','章節二 · 醫院回診','特別篇 · 診間篇','章節三 · 下班回家'];
 function chapLine(r){
   var d=r.d, a=[];
   if(r.ch===3){
@@ -736,7 +738,7 @@ function shareCanvas(g,score,L){
   x.fillStyle='#c4503a'; x.font='600 400px '+SER; x.fillText(g[0],540,665);
   x.fillStyle='#26222f'; x.font='600 62px '+SER; x.fillText(score+' 分　'+g[1],540,750);
   x.fillStyle='#675f77'; x.font='38px '+SER; wrapTxt(x,g[2],540,820,780,56);
-  var cs=L.map(function(r){return ['一','二','三','四'][r.ch-1]+' '+r.score}).join('　');
+  var cs=L.map(function(r){return (r.ch===3?'特':['一','二','','三'][r.ch-1])+' '+r.score}).join('　');
   x.font='30px '+SAN; x.fillText('章節　'+cs,540,935);
   /* A-E row */
   var bw=152,gap=20,x0=(1080-(bw*5+gap*4))/2,y0=980,i,bx;
@@ -773,14 +775,14 @@ function summary(reason){
   L.forEach(function(r){ tot.puffs+=r.puffs; tot.passive+=r.passive; tot.photos+=r.d.photos; tot.caught+=r.d.caught; tot.reports+=r.d.reports; tot.revived+=(r.d.revived||0); tot.ok+=r.d.ok; tot.tries+=r.d.tries; sum+=r.score; });
   var score=Math.max(0,Math.min(100,Math.round(sum/L.length-tot.caught*3-tot.revived*8)));
   var g=gradeOf(score), full=(reason==='done');
-  var T=full?(SC===ALL?['今日完整行程結束','從逛街、回診、上班到回家，您走完了一整天。']:SC[SC.length-1].ch===4?['今晚的行程結束','您帶著孩子回到了家。門一關，味道還在衣服上。']:['今日行程結束','您推著娃娃車走完了這一趟。']):
+  var T=full?(SC===FULL?['今日完整行程結束','從逛街、回診到回家，您走完了一整天。']:SC[SC.length-1].ch===4?['今晚的行程結束','您帶著孩子回到了家。門一關，味道還在衣服上。']:['今日行程結束','您推著娃娃車走完了這一趟。']):
     {road:['行程提早結束','為了躲煙，您走下了人行道。'],air:['行程提早結束','寶寶咳得停不下來，只好打道回府。'],pat:['行程提早結束','耐心用完了，今天只能到這裡。'],time:['行程提早結束','時間用完了。'],smell:['行程提早結束','味道太濃了，今天只能到這裡。']}[reason]||['行程結束',''];
   var cards=L.map(function(r){ var t=chapLine(r); return '<div class="cc"><div class="h"><b>'+CHN[r.ch]+'</b><span>'+r.score+' 分</span></div><div class="l">'+t[0]+'</div><div class="r">'+t[1]+'</div></div>'; }).join('');
   var txt='無菸城市｜今日文明指數 '+g[0]+'（'+score+'）：'+g[1]+'。'+g[2]+' https://orz629.github.io/smoke-free';
   $('#play').hidden=true; var e=$('#end'); e.hidden=false;
   e.innerHTML=
    '<h2>'+T[0]+'</h2><p class="sub">'+T[1]+'</p>'+
-   '<div class="grade"><div class="g">'+g[0]+'</div><div class="n"><b>今日文明指數 '+score+'：'+g[1]+'</b>'+g[2]+'<br><small>本指數為遊戲虛構。'+(full&&SC===ALL?'':(SC===ALL?'僅計算已經玩過的章節。':'僅計算這一章。'))+'</small></div></div>'+
+   '<div class="grade"><div class="g">'+g[0]+'</div><div class="n"><b>今日文明指數 '+score+'：'+g[1]+'</b>'+g[2]+'<br><small>本指數為遊戲虛構。'+(full&&SC===FULL?'':(SC===FULL?'僅計算已經玩過的章節。':'僅計算這一章。'))+'</small></div></div>'+
    '<div id="shareimg" hidden></div>'+
    '<button class="choice" id="sh"><b>產生分享圖</b><span>存成圖片，貼給朋友看看</span></button>'+
    '<button class="choice sm" id="cp"><b>只複製文字</b></button>'+
@@ -796,8 +798,10 @@ function summary(reason){
    '<div class="real"><p>現實：國民健康署指出，國內平均每年近 3,000 人死於二手菸害。</p>'+
    '<p>在公告禁菸的場所遇到有人吸菸，可向當地衛生局檢舉，並附上照片或影片；蒐證請保持距離、不要正面衝突。</p>'+
    '<p>吸菸會讓牙周治療後的癒合較差，也較容易復發。國健署免費戒菸專線 0800-636363（戒菸撥 63）。</p></div>'+
+   (full&&SC===FULL?'<button class="choice one" id="spx"><b>特別篇：診間篇</b><span>換您當牙周病醫師，看看診間裡的二手菸</span></button>':'')+
    '<button class="choice one big" id="again"><b>回到選單</b></button>';
   $('#again').onclick=menu;
+  if($('#spx')) $('#spx').onclick=function(){ start(3); };
   $('#sh').onclick=function(){ shareGrade(g,score,L,txt); };
   $('#cp').onclick=function(){
     var b=$('#cp'), ok=function(){ b.querySelector('b').textContent='已複製'; };
@@ -808,7 +812,7 @@ function summary(reason){
 /* ---------- 結算 ---------- */
 function end(reason){
   sfx('end');
-  if(S.ch3&&SC!==ALL) return end3(reason);
+  if(S.ch3&&SC!==FULL) return end3(reason);
   if(S.snapped!==SC[S.idx].ch) snapChap(SC[S.idx].ch); return summary(reason);
   mode='scene';M={};
   var T={
