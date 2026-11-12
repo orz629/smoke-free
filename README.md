@@ -34,11 +34,11 @@
 
 ## 授權
 
-© 2026 陳穎吾
+© 2026 zzxxbbxxzz
 
 本作品以 [創用 CC 姓名標示-非商業性-禁止改作 4.0 國際授權條款（CC BY-NC-ND 4.0）](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.zh_TW) 授權：
 
-- 可以：遊玩、分享，但必須標示作者「陳穎吾」。
+- 可以：遊玩、分享，但必須標示作者「zzxxbbxxzz」。
 - 不可以：商業使用、改作、轉載後修改。
 - **商業授權、改作、翻譯或二次創作，請先聯絡作者**：zzxxbbxxzz@gmail.com。
 - 意見回報、錯誤回報，也歡迎寄到同一個信箱。
